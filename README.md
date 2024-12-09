@@ -15,5 +15,6 @@ UnetSockets is available in the following languages:
 - [JavaScript](js/README.md)
 - [Python](python/README.md)
 - [Matlab](matlab/README.md)
+- [Julia](https://github.com/org-arl/UnetSockets.jl)
 
 Check out the respective READMEs for more information on how to install and use UnetSockets in your language of choice.
