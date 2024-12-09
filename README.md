@@ -11,7 +11,7 @@ UnetSockets build on top of the [fjåge Gateways](https://github.com/org-arl/fja
 
 UnetSockets is available in the following languages:
 
-- [C](c/README.md)]
+- [C](c/README.md)
 - [JavaScript](js/README.md)
 - [Python](python/README.md)
 - [Matlab](matlab/README.md)
