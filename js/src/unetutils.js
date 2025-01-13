@@ -74,6 +74,7 @@ let UnetMessages = {
 
   // phy
   'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
+  'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf),
   'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf),
   'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq'),
   'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
