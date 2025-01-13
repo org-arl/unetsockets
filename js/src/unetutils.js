@@ -2,6 +2,7 @@ import {AgentID, MessageClass, Services, Gateway} from 'fjage';
 
 const DatagramReq = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf = MessageClass('org.arl.unet.DatagramNtf');
+const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
 let UnetServices = {
@@ -73,7 +74,8 @@ let UnetMessages = {
 
   // phy
   'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
-  'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf'),
+  'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf),
+  'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf),
   'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq'),
   'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
   'BadRangeNtf'            : MessageClass('org.arl.unet.phy.BadRangeNtf'),
