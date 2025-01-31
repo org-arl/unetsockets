@@ -28,7 +28,6 @@ if (process.argv.includes('-m')) {
     await page.waitForSelector('.jasmine-overall-result');
     const classList = await page.$eval('.jasmine-overall-result', (el) => el.classList);
     const classes = Object.values(classList);
-    await page.waitForTimeout(100);
     await browser.close();
     console.log('Complete : ', classes.includes('jasmine-passed') ? 'PASSED':'FAILED');
     server.close();

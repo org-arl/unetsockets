@@ -4,7 +4,7 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.unet = {}));
 })(this, (function (exports) { 'use strict';
 
-  /* fjage.js v1.13.5 */
+  /* fjage.js v1.13.7 */
 
   const isBrowser =
     typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -698,7 +698,10 @@
   class Gateway {
 
     constructor(opts = {}) {
-      opts = Object.assign({}, GATEWAY_DEFAULTS, opts);
+      // Similar to Object.assign but also overwrites `undefined` and empty strings with defaults
+      for (var key in GATEWAY_DEFAULTS){
+        if (opts[key] == undefined || opts[key] === '') opts[key] = GATEWAY_DEFAULTS[key];
+      }
       var url = DEFAULT_URL;
       url.hostname = opts.hostname;
       url.port = opts.port;
@@ -716,7 +719,7 @@
       this.queue = [];                      // incoming message queue
       this.connected = false;               // connection status
       this.debug = false;                   // debug info to be logged to console?
-      this.aid = new AgentID((isBrowser ? 'WebGW-' : 'NodeGW-')+_guid(4));         // gateway agent name
+      this.aid = new AgentID('gateway-'+_guid(4));         // gateway agent name
       this.connector = this._createConnector(url);
       this._addGWCache(this);
     }
@@ -1312,6 +1315,7 @@
             this[k] = params[k];
           }
         }
+        if (name.endsWith('Req')) this.perf = Performative.REQUEST;
       }
     };
     cls.__clazz__ = name;
