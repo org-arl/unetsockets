@@ -2,6 +2,7 @@ import {AgentID, MessageClass, Services, Gateway} from 'fjage';
 
 const DatagramReq = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf = MessageClass('org.arl.unet.DatagramNtf');
+const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq);
 const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
@@ -75,8 +76,9 @@ let UnetMessages = {
   // phy
   'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
   'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf),
+  'TxSWiG1FrameReq'        : MessageClass('org.arl.unet.phy.TxSWiG1FrameReq', TxFrameReq),
   'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf),
-  'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq'),
+  'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq', TxFrameReq),
   'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
   'BadRangeNtf'            : MessageClass('org.arl.unet.phy.BadRangeNtf'),
   'ClearSyncReq'           : MessageClass('org.arl.unet.phy.ClearSyncReq'),
