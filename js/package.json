@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/org-arl/unet-contrib#readme",
   "dependencies": {
-    "fjage": "^1.13.8"
+    "fjage": "^1.13.9"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.23.3",
