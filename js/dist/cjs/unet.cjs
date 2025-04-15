@@ -1,4 +1,4 @@
-/* unet.js v3.2.1 2025-01-31T16:55:08.539Z */
+/* unet.js v3.2.2 2025-04-15T06:23:18.443Z */
 
 'use strict';
 
@@ -1450,6 +1450,7 @@ const ParameterReq = MessageClass('org.arl.fjage.param.ParameterReq');
 
 const DatagramReq$1 = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf$1 = MessageClass('org.arl.unet.DatagramNtf');
+const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq$1);
 const RxFrameNtf$1 = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf$1);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
@@ -1523,8 +1524,9 @@ let UnetMessages = {
   // phy
   'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
   'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf$1),
+  'TxSWiG1FrameReq'        : MessageClass('org.arl.unet.phy.TxSWiG1FrameReq', TxFrameReq),
   'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf$1),
-  'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq'),
+  'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq', TxFrameReq),
   'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
   'BadRangeNtf'            : MessageClass('org.arl.unet.phy.BadRangeNtf'),
   'ClearSyncReq'           : MessageClass('org.arl.unet.phy.ClearSyncReq'),

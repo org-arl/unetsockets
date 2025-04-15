@@ -1452,6 +1452,7 @@
 
   const DatagramReq$1 = MessageClass('org.arl.unet.DatagramReq');
   const DatagramNtf$1 = MessageClass('org.arl.unet.DatagramNtf');
+  const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq$1);
   const RxFrameNtf$1 = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf$1);
   const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
@@ -1525,8 +1526,9 @@
     // phy
     'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
     'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf$1),
+    'TxSWiG1FrameReq'        : MessageClass('org.arl.unet.phy.TxSWiG1FrameReq', TxFrameReq),
     'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf$1),
-    'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq'),
+    'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq', TxFrameReq),
     'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
     'BadRangeNtf'            : MessageClass('org.arl.unet.phy.BadRangeNtf'),
     'ClearSyncReq'           : MessageClass('org.arl.unet.phy.ClearSyncReq'),
