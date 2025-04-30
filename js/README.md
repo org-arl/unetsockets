@@ -15,6 +15,12 @@ $ npm install unetjs
 
 The API documentation of the latest version of unet.js is published at [https://github.com/org-arl/unet-contrib/tree/master/unetsocket/js/docs](https://github.com/org-arl/unet-contrib/tree/master/unetsocket/js/docs)
 
+## Versions
+
+### unetjs v4.0.0
+
+unetjs v4.0.0 picks up the breaking change in fjage.js v2.0.0. It enables automatic registration of subscriptions with the master container using `WANTS_MESSAGES_FOR` action. This is done everytime a fjage.js client subscribes to a topic. A change in fjåge to support a non-aggregating `WebSocketConnector` enabled this performance in fjage.js. So **unetjs v4.0.0 is only compatible with fjage.js v2.0.0 and above**.
+
 ## Usage
 
 ### Pre-defined Messages and Services

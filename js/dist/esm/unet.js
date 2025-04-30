@@ -1,6 +1,6 @@
-/* unet.js v3.2.4 2025-04-15T06:38:29.796Z */
+/* unet.js v4.0.0 2025-04-30T04:14:27.851Z */
 
-/* fjage.js v1.13.9 */
+/* fjage.js v2.0.0 */
 
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -990,13 +990,10 @@ class Gateway {
 
   /** @private */
   _update_watch() {
-    // FIXME : Turning off wantsMessagesFor in fjagejs for now as it breaks multiple browser
-    // windows connecting to the same master container.
-    //
-    // let watch = Object.keys(this.subscriptions);
-    // watch.push(this.aid.getName());
-    // let rq = { action: 'wantsMessagesFor', agentIDs: watch };
-    // this._msgTx(rq);
+    let watch = Object.keys(this.subscriptions);
+    watch.push(this.aid.getName());
+    let rq = { action: 'wantsMessagesFor', agentIDs: watch };
+    this._msgTx(rq);
   }
 
   /**

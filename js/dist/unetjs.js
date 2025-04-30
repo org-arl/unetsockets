@@ -4,7 +4,7 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.unet = {}));
 })(this, (function (exports) { 'use strict';
 
-  /* fjage.js v1.13.9 */
+  /* fjage.js v2.0.0 */
 
   const isBrowser =
     typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -994,13 +994,10 @@
 
     /** @private */
     _update_watch() {
-      // FIXME : Turning off wantsMessagesFor in fjagejs for now as it breaks multiple browser
-      // windows connecting to the same master container.
-      //
-      // let watch = Object.keys(this.subscriptions);
-      // watch.push(this.aid.getName());
-      // let rq = { action: 'wantsMessagesFor', agentIDs: watch };
-      // this._msgTx(rq);
+      let watch = Object.keys(this.subscriptions);
+      watch.push(this.aid.getName());
+      let rq = { action: 'wantsMessagesFor', agentIDs: watch };
+      this._msgTx(rq);
     }
 
     /**
