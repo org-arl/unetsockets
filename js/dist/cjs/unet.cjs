@@ -1,8 +1,8 @@
-/* unet.js v4.0.1 2025-05-14T14:03:47.464Z */
+/* unet.js v4.0.2 2025-05-19T10:05:53.629Z */
 
 'use strict';
 
-/* fjage.js v2.0.0 */
+/* fjage.js v2.1.0 */
 
 const isBrowser =
   typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -694,6 +694,7 @@ class Message {
  * @param {number} [opts.queueSize=128]      - size of the queue of received messages that haven't been consumed yet
  * @param {number} [opts.timeout=1000]       - timeout for fjage level messages in ms
  * @param {boolean} [opts.returnNullOnFailedResponse=true] - return null instead of throwing an error when a parameter is not found
+ * @param {boolean} [opts.cancelPendingOnDisconnect=false] - cancel pending requests on disconnect
  */
 class Gateway {
 
@@ -712,9 +713,10 @@ class Gateway {
     this._keepAlive = opts.keepAlive;     // reconnect if connection gets closed/errored
     this._queueSize = opts.queueSize;     // size of queue
     this._returnNullOnFailedResponse = opts.returnNullOnFailedResponse; // null or error
+    this._cancelPendingOnDisconnect = opts.cancelPendingOnDisconnect; // cancel pending requests on disconnect
     this.pending = {};                    // msgid to callback mapping for pending requests to server
     this.subscriptions = {};              // hashset for all topics that are subscribed
-    this.listener = {};                   // set of callbacks that want to listen to incoming messages
+    this.listeners = {};                  // list of callbacks that want to listen to incoming messages
     this.eventListeners = {};             // external listeners wanting to listen internal events
     this.queue = [];                      // incoming message queue
     this.connected = false;               // connection status
@@ -731,18 +733,36 @@ class Gateway {
    * @param {Object|Message|string} val - value to be sent to the listeners
    */
   _sendEvent(type, val) {
-    if (Array.isArray(this.eventListeners[type])) {
-      this.eventListeners[type].forEach(l => {
-        if (l && {}.toString.call(l) === '[object Function]'){
-          try {
-            l(val);
-          } catch (error) {
-            console.warn('Error in event listener : ' + error);
-          }
+    if (!Array.isArray(this.eventListeners[type])) return;
+    this.eventListeners[type].forEach(l => {
+      if (l && {}.toString.call(l) === '[object Function]'){
+        try {
+          l(val);
+        } catch (error) {
+          console.warn('Error in event listener : ' + error);
         }
-      });
-    }
+      }
+    });
   }
+
+  /**
+   * Sends the message to all registered receivers.
+   *
+   * @private
+   * @param {Message} msg
+   * @returns {boolean} - true if the message was consumed by any listener
+   */
+  _sendReceivers(msg) {
+    for (var lid in this.listeners){
+      try {
+        if (this.listeners[lid] && this.listeners[lid](msg)) return true;
+      } catch (error) {
+        console.warn('Error in listener : ' + error);
+      }
+    }
+    return false;
+  }
+
 
   /**
    * @private
@@ -770,32 +790,10 @@ class Gateway {
       if (!msg) return;
       this._sendEvent('rxmsg', msg);
       if ((msg.recipient == this.aid.toJSON() )|| this.subscriptions[msg.recipient]) {
-        var consumed = false;
-        if (Array.isArray(this.eventListeners['message'])){
-          for (var i = 0; i < this.eventListeners['message'].length; i++) {
-            try {
-              if (this.eventListeners['message'][i](msg)) {
-                consumed = true;
-                break;
-              }
-            } catch (error) {
-              console.warn('Error in message listener : ' + error);
-            }
-          }
-        }
-        // iterate over internal callbacks, until one consumes the message
-        for (var key in this.listener){
-          // callback returns true if it has consumed the message
-          try {
-            if (this.listener[key](msg)) {
-              consumed = true;
-              break;
-            }
-          } catch (error) {
-            console.warn('Error in listener : ' + error);
-          }
-        }
-        if(!consumed) {
+        // send to any "message" listeners
+        this._sendEvent('message', msg);
+        // send message to receivers, if not consumed, add to queue
+        if(!this._sendReceivers(msg)) {
           if (this.queue.length >= this._queueSize) this.queue.shift();
           this.queue.push(msg);
         }
@@ -849,7 +847,7 @@ class Gateway {
     return new Promise(resolve => {
       let timer = setTimeout(() => {
         delete this.pending[rq.id];
-        if (this.debug) console.log('Receive Timeout : ' + rq);
+        if (this.debug) console.log('Receive Timeout : ' + JSON.stringify(rq));
         resolve();
       }, 8*this._timeout);
       this.pending[rq.id] = rsp => {
@@ -859,7 +857,7 @@ class Gateway {
       if (!this._msgTx.call(this,rq)) {
         clearTimeout(timer);
         delete this.pending[rq.id];
-        if (this.debug) console.log('Transmit Timeout : ' + rq);
+        if (this.debug) console.log('Transmit Timeout : ' +  JSON.stringify(rq));
         resolve();
       }
     });
@@ -895,6 +893,11 @@ class Gateway {
         this.flush();
         this.connector.write('{"alive": true}');
         this._update_watch();
+      } else {
+        if (this._cancelPendingOnDisconnect) {
+          this._sendReceivers(null);
+          this.flush();
+        }
       }
       this._sendEvent('conn', state);
     });
@@ -1253,15 +1256,18 @@ class Gateway {
       let timer;
       if (timeout > 0){
         timer = setTimeout(() => {
-          this.listener[lid] && delete this.listener[lid];
+          this.listeners[lid] && delete this.listeners[lid];
           if (this.debug) console.log('Receive Timeout : ' + filter);
           resolve();
         }, timeout);
       }
-      this.listener[lid] = msg => {
-        if (!this._matchMessage(filter, msg)) return false;
+      // listener for each pending receive
+      this.listeners[lid] = msg => {
+        // skip if the message does not match the filter
+        if (msg && !this._matchMessage(filter, msg)) return false;
         if(timer) clearTimeout(timer);
-        this.listener[lid] && delete this.listener[lid];
+        // if the message matches the filter or is null, delete listener clear timer and resolve
+        this.listeners[lid] && delete this.listeners[lid];
         resolve(msg);
         return true;
       };
@@ -1407,7 +1413,8 @@ if (isBrowser || isWebWorker){
     'timeout': 1000,
     'keepAlive' : true,
     'queueSize': DEFAULT_QUEUE_SIZE,
-    'returnNullOnFailedResponse': true
+    'returnNullOnFailedResponse': true,
+    'cancelPendingOnDisconnect': false
   });
   DEFAULT_URL = new URL('ws://localhost');
   // Enable caching of Gateways
@@ -1422,7 +1429,8 @@ if (isBrowser || isWebWorker){
     'timeout': 1000,
     'keepAlive' : true,
     'queueSize': DEFAULT_QUEUE_SIZE,
-    'returnNullOnFailedResponse': true
+    'returnNullOnFailedResponse': true,
+    'cancelPendingOnDisconnect': false
   });
   DEFAULT_URL = new URL('tcp://localhost');
   gObj.atob = a => Buffer.from(a, 'base64').toString('binary');
