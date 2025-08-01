@@ -9,7 +9,7 @@ const fs = require('fs');
 const { exit } = require('process');
 
 const cjs_includes = [
-  'const { UnetSocket, Services, AgentID, CachingAgentID, CachingGateway, Gateway, Protocol, UnetMessages, toGps, toLocal} = require(\'../../dist/cjs/unet.cjs\');',
+  'const { UnetSocket, Services, AgentID, Gateway, Protocol, UnetMessages, toGps, toLocal} = require(\'../../dist/cjs/unet.cjs\');',
   'const { isBrowser, isJsDom, isNode } = require(\'../../node_modules/browser-or-node/dist/index.js\');',
   'const dns = require(\'dns\');',
   'dns.setDefaultResultOrder(\'ipv4first\');',
@@ -17,7 +17,7 @@ const cjs_includes = [
 ];
 
 const esm_includes = [
-  'import { UnetSocket, Services, AgentID, CachingAgentID, CachingGateway, Gateway, Protocol, UnetMessages, toGps, toLocal } from \'../../dist/esm/unet.js\';',
+  'import { UnetSocket, Services, AgentID, Gateway, Protocol, UnetMessages, toGps, toLocal } from \'../../dist/esm/unet.js\';',
   'import { isBrowser, isNode, isJsDom } from \'../../node_modules/browser-or-node/dist/index.mjs\';',
   ''
 ];

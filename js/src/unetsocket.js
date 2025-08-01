@@ -239,34 +239,31 @@ export default class UnetSocket {
   /**
    * Gets an AgentID providing a specified service for low-level access to UnetStack
    * @param {string} svc - the named service of interest
-   * @param {Boolean} caching - if the AgentID should cache parameters
    * @returns {Promise<?AgentID>} - a promise which returns an {@link AgentID} that provides the service when resolved
    */
-  async agentForService(svc, caching=true) {
+  async agentForService(svc) {
     if (this.gw == null) return null;
-    return await this.gw.agentForService(svc, caching);
+    return await this.gw.agentForService(svc);
   }
 
   /**
    *
    * @param {string} svc - the named service of interest
-   * @param {Boolean} caching - if the AgentID should cache parameters
    * @returns {Promise<AgentID[]>} - a promise which returns an array of {@link AgentID|AgentIDs} that provides the service when resolved
    */
-  async agentsForService(svc, caching=true) {
+  async agentsForService(svc) {
     if (this.gw == null) return null;
-    return await this.gw.agentsForService(svc, caching``);
+    return await this.gw.agentsForService(svc);
   }
 
   /**
    * Gets a named AgentID for low-level access to UnetStack.
    * @param {string} name - name of agent
-   * @param {Boolean} caching - if the AgentID should cache parameters
    * @returns {AgentID} - AgentID for the given name
    */
-  agent(name, caching=true) {
+  agent(name) {
     if (this.gw == null) return null;
-    return this.gw.agent(name, caching);
+    return this.gw.agent(name);
   }
 
   /**
