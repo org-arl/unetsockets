@@ -15,7 +15,7 @@ port = 1100
 ip_address = 'localhost'
 
 if (len(sys.argv) < 2):
-	print("Usage : rxdata <ip_address> <rx_node_address> <port> \n"
+	print("Usage : rxdata <ip_address> <port> \n"
 	      "ip_address: IP address of the transmitter modem. \n"
 	      "port: port number of transmitter modem. \n"
 	      "A usage example: \n"
