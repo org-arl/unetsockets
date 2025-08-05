@@ -16,7 +16,7 @@ ip_address = 'localhost'
 node_address = 0
 data = [1,2,3,4,5,6,7]
 
-if (len(sys.argv) < 3):
+if (len(sys.argv) < 2):
 	print("Usage : txdata <ip_address> <rx_node_address> <port> \n"
 	      "ip_address: IP address of the transmitter modem. \n"
 	      "rx_node_address: Node address of the receiver modem. \n"
