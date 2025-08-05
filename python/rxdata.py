@@ -16,7 +16,7 @@ ip_address = 'localhost'
 
 if (len(sys.argv) < 2):
 	print("Usage : rxdata <ip_address> [port] \n"
-	      "ip_address: IP address of the transmitter modem. \n"
+	      "ip_address: IP address of the receiver modem. \n"
 	      "port: (optional) port number of transmitter modem (default: 1100). \n"
 	      "A usage example: \n"
 	      "rxdata.py 192.168.1.20 1100\n");
