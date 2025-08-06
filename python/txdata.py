@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(
 	epilog="Example: txdata.py 192.168.1.20 5 1100"
 )
 parser.add_argument("ip", help="IP address of the transmitter modem")
-parser.add_argument("node_address", type=int, help="Node address of the receiver modem (0 =)")
+parser.add_argument("node_address", type=int, help="Node address of the receiver modem (use 0 for broadcast)")
 parser.add_argument("port", nargs="?", type=int, default=1100, help="Port number of transmitter modem (default: 1100)")
 
 args = parser.parse_args()
