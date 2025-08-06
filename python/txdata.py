@@ -1,47 +1,42 @@
-#///////////////////////////////////////////////////////////////////////////////
-#//
-#// Script to transmit data.
-#//
-#// In terminal window (an example):
-#//
-#// $ txdata.py <ip_address> <rx_node_address> [port]
-#//
-#////////////////////////////////////////////////////////////////////////////////
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# txdata.py - Transmit data using UnetSocket
 
 from unetpy import *
 import sys
+import argparse
 
+ip = 'localhost'
 port = 1100
-ip_address = 'localhost'
-node_address = 0
+address = 0
 data = [1,2,3,4,5,6,7]
 
-if (len(sys.argv) < 3):
-	print("Usage : txdata <ip_address> <rx_node_address> <port> \n"
-	      "ip_address: IP address of the transmitter modem. \n"
-	      "rx_node_address: Node address of the receiver modem. \n"
-	      "port: port number of transmitter modem. \n"
-	      "A usage example: \n"
-	      "txdata.py 192.168.1.20 5 1100\n");
-	sys.exit();
+parser = argparse.ArgumentParser(
+	description="Transmit data using UnetSocket.",
+	epilog="Example: txdata.py 192.168.1.20 5 1100"
+)
+parser.add_argument("ip", help="IP address of the transmitter modem")
+parser.add_argument("node_address", type=int, help="Node address of the receiver modem (use 0 for broadcast)")
+parser.add_argument("port", nargs="?", type=int, default=1100, help="Port number of transmitter modem (default: 1100)")
 
-ip_address = sys.argv[1]
-node_address = sys.argv[2]
+args = parser.parse_args()
 
-if (len(sys.argv) > 3):
-	port = int(sys.argv[3])
+ip = args.ip
+address = args.node_address
+port = args.port
 
-print("Connecting to " + ip_address + ":" + str(port));
-sock = UnetSocket(ip_address, port)
+# Connect to the Unet instance
+print(f"Connecting to {ip}:{port}")
+sock = UnetSocket(ip, port)
 if ( sock == None ):
-	print("Couldn't open unet socket");
-	sys.exit();
+	print(f"Couldn't open UnetSocket to {ip}:{port}")
+	sys.exit()
 
 # Transmit data
-print("Transmitting " + str(len(data)) + " bytes of data to " + str(node_address));
-sock.send(data, node_address, Protocol.DATA);
+print(f"Transmitting {len(data)} bytes of data to {address}")
+sock.send(data, address, Protocol.DATA);
 
-# Close the unet socket
+# Close the UnetSocket
 sock.close()
 
-print("Transmission Complete");
+print("Transmission Complete")
