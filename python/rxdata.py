@@ -11,7 +11,7 @@ port = 1100
 
 parser = argparse.ArgumentParser(description='Receive data using UnetSocket.')
 parser.add_argument('ip', help='IP address of the receiver modem')
-parser.add_argument('port', nargs='?', type=int, default=1100, help='Port number of transmitter modem (default: 1100)')
+parser.add_argument('port', nargs='?', type=int, default=1100, help='Port number of receiver modem (default: 1100)')
 args = parser.parse_args()
 
 ip = args.ip
