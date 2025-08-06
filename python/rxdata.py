@@ -21,7 +21,7 @@ port = args.port
 print(f"Connecting to {ip}:{port}")
 sock = UnetSocket(ip, port)
 if ( sock == None ):
-	print("Couldn't open UnetSocket");
+	print(f"Couldn't open UnetSocket to {ip}:{port}");
 	sys.exit();
 
 # Bind to protocol DATA
