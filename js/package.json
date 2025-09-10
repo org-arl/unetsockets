@@ -1,6 +1,6 @@
 {
   "name": "unetjs",
-  "version": "4.0.2",
+  "version": "5.0.0",
   "description": "JavaScript Helper Library for UnetStack",
   "main": "./dist/cjs/unet.cjs",
   "exports": {
@@ -37,19 +37,19 @@
   },
   "homepage": "https://github.com/org-arl/unet-contrib#readme",
   "dependencies": {
-    "fjage": "2.1.0"
+    "fjage": "2.2.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.23.3",
+    "@babel/eslint-parser": "^7.28.4",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "browser-or-node": "^3.0.0",
     "documentation": "^14.0.3",
-    "eslint": "^9.25.1",
-    "globals": "^15.11.0",
-    "jasmine": "^5.1.0",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
+    "jasmine": "^5.10.0",
     "node-static": "^0.7.11",
-    "puppeteer": "^24.7.2",
-    "rollup": "^4.8.0"
+    "puppeteer": "^24.19.0",
+    "rollup": "^4.50.1"
   }
 }

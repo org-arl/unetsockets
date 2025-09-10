@@ -77,6 +77,8 @@ UnetSocket API acheives this using two mechanism, firstly, it can request ALL of
 
 Secondly, the UnetSocket API caches the responses to parameter requests for a limited time. If the user requests the same parameter again, the UnetSocket will return the cached response. The time to cache a response is set by the `cacheTime` property in the `CachingAgentID` constructor.
 
+> unetsockets.js v5.0.0 and beyond the UnetSocket API was changed to remove the optional parameter `caching` from the `agentForService`, `agentsForService` and `agent` methods. This was done to simplify the API and avoid confusion. The caching behaviour is now enabled by using a different class, `CachingGateway` instead of `Gateway`. The `CachingGateway` class extends the `Gateway` class and adds the caching behaviour.
+
 ```js
 import {UnetMessages, CachingGateway} from 'unetjs'
 let gw = new CachingGateway({...});
