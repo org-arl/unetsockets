@@ -1,8 +1,8 @@
-/* unet.js v5.0.0 2025-09-10T05:44:10.408Z */
+/* unet.js v5.0.1 2025-09-10T10:45:09.129Z */
 
 'use strict';
 
-/* fjage.js v2.2.1 */
+/* fjage.js v2.2.2 */
 
 /**
 * An action represented by a message. The performative actions are a subset of the
@@ -704,7 +704,7 @@ class JSONMessage {
       jsonObj.services = this.services;
       if (jsonObj.services.length === 0) delete jsonObj.services; // remove empty array
     }
-    if (this.answer) jsonObj.answer = this.answer;
+    if (this.answer != undefined) jsonObj.answer = this.answer;
     if (this.message) jsonObj.message = this.message;
     if (this.relay) jsonObj.relay = this.relay;
     if (this.creds) jsonObj.creds = this.creds;

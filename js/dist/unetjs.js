@@ -4,7 +4,7 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.unet = {}));
 })(this, (function (exports) { 'use strict';
 
-  /* fjage.js v2.2.1 */
+  /* fjage.js v2.2.2 */
 
   /**
   * An action represented by a message. The performative actions are a subset of the
@@ -706,7 +706,7 @@
         jsonObj.services = this.services;
         if (jsonObj.services.length === 0) delete jsonObj.services; // remove empty array
       }
-      if (this.answer) jsonObj.answer = this.answer;
+      if (this.answer != undefined) jsonObj.answer = this.answer;
       if (this.message) jsonObj.message = this.message;
       if (this.relay) jsonObj.relay = this.relay;
       if (this.creds) jsonObj.creds = this.creds;
