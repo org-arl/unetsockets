@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "unetpy"
+dynamic = ["version"]
+description = "Unet Python Gateway"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "Mandar Chitre", email = "mandar@arl.nus.edu.sg"},
+    {name = "Prasad Anjangi", email = "prasad@subnero.com"},
+]
+maintainers = [
+    {name = "Subnero", email = "support@subnero.com"},
+]
+keywords = ["unet", "modem", "underwater", "communications"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.11",
+    "fjagepy>=1.7.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/org-arl/unet-contrib/tree/master/unetsocket/python"
+Documentation = "https://unetstack.net/"
+Source = "https://github.com/org-arl/unet-contrib"
+Issues = "https://github.com/org-arl/unet-contrib/issues"
+
+[project.scripts]
+unetpy-rx = "unetpy.cli.rx:main"
+unetpy-tx = "unetpy.cli.tx:main"
+
+[tool.hatch.version]
+path = "src/unetpy/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/unetpy"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/unetpy",
+    "README.md",
+    "LICENSE",
+    "rxdata.py",
+    "txdata.py",
+    "test",
+    "Makefile",
+]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "N",
+]
