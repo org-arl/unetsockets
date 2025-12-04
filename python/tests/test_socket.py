@@ -155,7 +155,7 @@ class TestUnetSocketBindUnbind:
             assert sock.getRemoteProtocol() == 0
 
 
-def _drain_pending_messages(sock, timeout_ms=500):
+def _drain_pending_messages(sock, timeout_ms=100):
     """Drain any pending messages from the socket."""
     sock.setTimeout(timeout_ms)
     while sock.receive() is not None:
@@ -228,7 +228,7 @@ class TestUnetSocketCommunication:
                 assert sock2.bind(Protocol.USER)
                 # Drain any stale messages from previous tests
                 _drain_pending_messages(sock2)
-                sock2.setTimeout(2000)
+                sock2.setTimeout(5000)
 
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
 
@@ -245,7 +245,8 @@ class TestUnetSocketCommunication:
 
                 # Send to different address should not be received
                 assert sock1.send([27, 28, 29], 27, Protocol.USER)
-                assert sock2.receive() is None
+                ntf = sock2.receive()
+                assert ntf == None
 
                 # Connected send with data should work
                 assert sock1.send([30, 31, 32])

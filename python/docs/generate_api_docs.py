@@ -2,16 +2,16 @@
 """Generate API documentation from source code docstrings.
 
 This script extracts docstrings from the unetpy source modules and
-generates markdown documentation files in doc/api/.
+generates markdown documentation files in docs/api/.
 
 Usage:
-    python doc/generate_api_docs.py
+    python docs/generate_api_docs.py
 
 The script will create/update the following files:
-    - doc/api/unetsocket.md
-    - doc/api/constants.md
-    - doc/api/messages.md
-    - doc/api/utilities.md
+    - docs/api/unetsocket.md
+    - docs/api/constants.md
+    - docs/api/messages.md
+    - docs/api/utilities.md
 """
 
 from __future__ import annotations

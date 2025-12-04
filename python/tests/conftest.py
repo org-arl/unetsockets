@@ -20,7 +20,7 @@ def socket_module_setup():
 
     time.sleep(2)  # Wait a bit for the script to complete
 
-    subprocess.run(["tests/sim.sh", "start"], check=True)
+    # subprocess.run(["tests/sim.sh", "start"], check=True)
 
     time.sleep(10)  # Wait for the simulator to start
 
@@ -31,4 +31,4 @@ def socket_module_setup():
     # Teardown code runs here after all tests complete
     print("\n[Teardown] stopping UnetStack")
 
-    subprocess.run(["tests/sim.sh", "stop"], check=True)
+    # subprocess.run(["tests/sim.sh", "stop"], check=True)

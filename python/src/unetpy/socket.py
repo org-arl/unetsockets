@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional, Sequence, Union
+from typing import Iterable, Optional, Sequence, Union, Callable
 
 from fjagepy import AgentID, Gateway, Message, Performative
-from .constants import Protocol, Services, Topics
-from .messages import AddressResolutionReq, DatagramNtf, DatagramReq, RxFrameNtf
+from .constants import Protocol, Services, Topics, Address
+from .messages import AddressResolutionReq, DatagramNtf, DatagramReq
 
 __all__ = ["UnetSocket"]
 
@@ -359,19 +359,25 @@ class UnetSocket:
         if self.gw is None:
             return None
 
-        def _matches(ntf) -> bool:
-            if ntf == None or not isinstance(ntf, DatagramNtf):
-                return False
-            proto = getattr(ntf, "protocol", Protocol.DATA)
-            logger.debug(f"Checking if received datagram [{ntf} protocol={proto}] matches")
-            if proto != Protocol.DATA and proto < Protocol.USER:
-                return False
-            return self.localProtocol < 0 or self.localProtocol == proto
+        def _createMatcher(localAddress, localProtocol) -> Callable[[Message], bool]:
+            def _matches(ntf) -> bool:
+                if ntf is None or not isinstance(ntf, DatagramNtf):
+                    return False
+                to = getattr(ntf, "to", -1)
+                if to != localAddress and to != Address.BROADCAST:
+                    return False
+                proto = getattr(ntf, "protocol", Protocol.DATA)
+                logger.debug(f"Checking if received datagram [{ntf} protocol={proto}] matches")
+                if proto != Protocol.DATA and proto < Protocol.USER:
+                    return False
+                return localProtocol < 0 or localProtocol == proto
+            return _matches
 
         effective_timeout = self._effective_timeout(timeout)
         logger.debug(f"Trying to receive datagram for up to {effective_timeout} ms")
         try:
-            return self.gw.receive(_matches, effective_timeout)
+            localAddress = self.getLocalAddress()
+            return self.gw.receive(_createMatcher(localAddress, self.localProtocol), effective_timeout)
         except Exception as e:
             logger.error(f"Failed to receive datagram", exc_info=True)
 
