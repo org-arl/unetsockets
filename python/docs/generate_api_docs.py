@@ -17,7 +17,6 @@ The script will create/update the following files:
 from __future__ import annotations
 
 import inspect
-import re
 import sys
 from pathlib import Path
 from typing import Any
