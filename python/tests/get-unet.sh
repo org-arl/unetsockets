@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Downloads and sets up UnetStack for testing unet.js.
+# Downloads and sets up UnetStack for testing unetpy.
 
 UNET_URL=https://unetstack.net/downloads/unet-community-3.1.0.tgz
 
