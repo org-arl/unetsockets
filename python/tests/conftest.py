@@ -14,7 +14,7 @@ def socket_module_setup():
 
     print("\n[Setup] downloading UnetStack")
 
-    subprocess.run("tests/get-unet.sh", check=True)
+    subprocess.run(["tests/get-unet.sh"], check=True)
 
     print("[Setup] starting Unet simulator")
 
