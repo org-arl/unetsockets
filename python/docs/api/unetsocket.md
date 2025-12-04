@@ -22,10 +22,7 @@ blocking receives on top of fjåge's Gateway.
 
 | Attribute | Description |
 |-----------|-------------|
-| `REQUEST_TIMEOUT (int)` | Default timeout for requests in milliseconds (1000). |
-| `hostname (str)` | Connected hostname. |
-| `port (int)` | Connected port number. |
-| `gw (Gateway | None)` | Underlying fjåge Gateway instance. |
+| `gw (Gateway)` | Underlying fjåge Gateway instance. |
 | `localProtocol (int)` | Bound protocol number (-1 if unbound). |
 | `remoteAddress (int)` | Default destination address (-1 if not connected). |
 | `remoteProtocol (int)` | Default protocol for sending. |
@@ -53,7 +50,7 @@ blocking receives on top of fjåge's Gateway.
 ## Constructor
 
 ```python
-UnetSocket(self, hostname: 'str', port: 'int' = 1100, *, gateway_cls: 'type[Gateway]' = <class 'fjagepy.Gateway.Gateway'>) -> 'None'
+UnetSocket(hostname: 'str', port: 'int' = 1100) -> 'None'
 ```
 
 Create a new UnetSocket connected to the specified host.
@@ -65,7 +62,6 @@ Create a new UnetSocket connected to the specified host.
 |-----------|-------------|
 | `hostname` | Hostname or IP address of the UnetStack node. |
 | `port` | TCP port number (default: 1100). |
-| `gateway_cls` | Gateway class to use, for testing purposes. |
 
 **Example:**
 
@@ -83,7 +79,7 @@ Create a new UnetSocket connected to the specified host.
 ### agent()
 
 ```python
-agent(self, name: 'str')
+agent(name: 'str') -> 'Optional[AgentID]'
 ```
 
 Get an agent by name.
@@ -111,7 +107,7 @@ Get an agent by name.
 ### agentForService()
 
 ```python
-agentForService(self, svc)
+agentForService(svc) -> 'Optional[AgentID]'
 ```
 
 Get an agent providing the specified service.
@@ -139,7 +135,7 @@ Get an agent providing the specified service.
 ### agentsForService()
 
 ```python
-agentsForService(self, svc)
+agentsForService(svc) -> 'Optional[Iterable[AgentID]]'
 ```
 
 Get all agents providing the specified service.
@@ -160,7 +156,7 @@ Get all agents providing the specified service.
 ### bind()
 
 ```python
-bind(self, protocol: 'int') -> 'bool'
+bind(protocol: 'int') -> 'bool'
 ```
 
 Bind the socket to listen for a specific protocol.
@@ -192,36 +188,10 @@ and cannot be bound. Unbound sockets listen to all unreserved protocols.
 
 ---
 
-### cancel()
-
-```python
-cancel(self) -> 'None'
-```
-
-Cancel an ongoing blocking receive() call.
-
-This method can be called from another thread to unblock a waiting
-receive() call.
-
-
-**Example:**
-
-```python
-    >>> import threading
-    >>> def canceller():
-    ...     time.sleep(2)
-    ...     sock.cancel()
-    >>> thread = threading.Thread(target=canceller)
-    >>> thread.start()
-    >>> ntf = sock.receive()  # Will be cancelled after 2 seconds
-```
-
----
-
 ### close()
 
 ```python
-close(self) -> 'None'
+close() -> 'None'
 ```
 
 Close the socket and release all resources.
@@ -246,7 +216,7 @@ All subsequent operations will fail or return None/-1.
 ### connect()
 
 ```python
-connect(self, to: 'int', protocol: 'int' = 0) -> 'bool'
+connect(to: 'int', protocol: 'int' = 0) -> 'bool'
 ```
 
 Set the default destination address and protocol for sending.
@@ -280,7 +250,7 @@ between Protocol.DATA+1 to Protocol.USER-1 are reserved and cannot be used.
 ### disconnect()
 
 ```python
-disconnect(self) -> 'None'
+disconnect() -> 'None'
 ```
 
 Reset the default destination address and protocol.
@@ -303,7 +273,7 @@ The default protocol is reset to Protocol.DATA.
 ### getGateway()
 
 ```python
-getGateway(self) -> 'Optional[Gateway]'
+getGateway() -> 'Optional[Gateway]'
 ```
 
 Get the underlying fjåge Gateway for low-level access.
@@ -325,7 +295,7 @@ Get the underlying fjåge Gateway for low-level access.
 ### getLocalAddress()
 
 ```python
-getLocalAddress(self) -> 'int'
+getLocalAddress() -> 'int'
 ```
 
 Get the local node address.
@@ -347,7 +317,7 @@ Get the local node address.
 ### getLocalProtocol()
 
 ```python
-getLocalProtocol(self) -> 'int'
+getLocalProtocol() -> 'int'
 ```
 
 Get the protocol number that the socket is bound to.
@@ -362,7 +332,7 @@ Get the protocol number that the socket is bound to.
 ### getRemoteAddress()
 
 ```python
-getRemoteAddress(self) -> 'int'
+getRemoteAddress() -> 'int'
 ```
 
 Get the default destination node address.
@@ -377,7 +347,7 @@ Get the default destination node address.
 ### getRemoteProtocol()
 
 ```python
-getRemoteProtocol(self) -> 'int'
+getRemoteProtocol() -> 'int'
 ```
 
 Get the default transmission protocol number.
@@ -392,22 +362,7 @@ Get the default transmission protocol number.
 ### getTimeout()
 
 ```python
-getTimeout(self) -> 'int'
-```
-
-Get the current receive timeout (legacy API).
-
-
-**Returns:**
-
-    Timeout in milliseconds.
-
----
-
-### get_timeout()
-
-```python
-get_timeout(self) -> 'int'
+getTimeout() -> 'int'
 ```
 
 Get the current receive timeout.
@@ -422,7 +377,7 @@ Get the current receive timeout.
 ### host()
 
 ```python
-host(self, nodeName: 'str')
+host(nodeName: 'str') -> 'Optional[int]'
 ```
 
 Resolve a node name to its address.
@@ -452,52 +407,7 @@ Resolve a node name to its address.
 ### isBound()
 
 ```python
-isBound(self) -> 'bool'
-```
-
-Check if the socket is bound to a protocol (legacy API).
-
-
-**Returns:**
-
-    True if bound to a specific protocol, False otherwise.
-
----
-
-### isClosed()
-
-```python
-isClosed(self) -> 'bool'
-```
-
-Check if the socket is closed (legacy API).
-
-
-**Returns:**
-
-    True if the socket has been closed, False otherwise.
-
----
-
-### isConnected()
-
-```python
-isConnected(self) -> 'bool'
-```
-
-Check if a default destination is set (legacy API).
-
-
-**Returns:**
-
-    True if connected (default destination set), False otherwise.
-
----
-
-### is_bound()
-
-```python
-is_bound(self) -> 'bool'
+isBound() -> 'bool'
 ```
 
 Check if the socket is bound to a protocol.
@@ -509,10 +419,10 @@ Check if the socket is bound to a protocol.
 
 ---
 
-### is_closed()
+### isClosed()
 
 ```python
-is_closed(self) -> 'bool'
+isClosed() -> 'bool'
 ```
 
 Check if the socket is closed.
@@ -524,10 +434,10 @@ Check if the socket is closed.
 
 ---
 
-### is_connected()
+### isConnected()
 
 ```python
-is_connected(self) -> 'bool'
+isConnected() -> 'bool'
 ```
 
 Check if a default destination is set.
@@ -542,7 +452,7 @@ Check if a default destination is set.
 ### receive()
 
 ```python
-receive(self, timeout: 'Optional[int]' = None)
+receive(timeout: 'Optional[int]' = None) -> 'Optional[DatagramNtf]'
 ```
 
 Receive a datagram sent to the local node.
@@ -551,8 +461,8 @@ If the socket is bound, only receives datagrams matching the bound protocol.
 If unbound, receives datagrams with all unreserved protocols.
 Broadcast datagrams are always received.
 
-This call blocks until a datagram is available, the socket timeout is reached,
-or until cancel() is called.
+This call blocks until a datagram is available, the socket timeout is reached.
+There is currently no way to cancel a blocking receive.
 
 
 **Parameters:**
@@ -580,7 +490,7 @@ or until cancel() is called.
 ### send()
 
 ```python
-send(self, data: 'Union[bytes, bytearray, Sequence[int], Message, str]', to: 'Optional[int]' = None, protocol: 'Optional[int]' = None) -> 'bool'
+send(data: 'Union[bytes, bytearray, Sequence[int], Message, str]', to: 'Optional[int]' = None, protocol: 'Optional[int]' = None) -> 'bool'
 ```
 
 Transmit a datagram to the specified destination.
@@ -617,24 +527,7 @@ and cannot be used for sending.
 ### setTimeout()
 
 ```python
-setTimeout(self, ms: 'int') -> 'None'
-```
-
-Set the receive timeout (legacy API).
-
-
-**Parameters:**
-
-| Parameter | Description |
-|-----------|-------------|
-| `ms` | Timeout in milliseconds. Use 0 for non-blocking, |
-
----
-
-### set_timeout()
-
-```python
-set_timeout(self, ms: 'int') -> 'None'
+setTimeout(ms: 'int') -> 'None'
 ```
 
 Set the receive timeout.
@@ -644,22 +537,14 @@ Set the receive timeout.
 
 | Parameter | Description |
 |-----------|-------------|
-| `ms` | Timeout in milliseconds. Use 0 for non-blocking, |
-
-**Example:**
-
-```python
-    >>> sock.set_timeout(5000)  # 5 second timeout
-    >>> sock.set_timeout(0)     # Non-blocking
-    >>> sock.set_timeout(-1)    # Blocking
-```
+| `ms` | Timeout in milliseconds. 0 = non-blocking, -1 = blocking. |
 
 ---
 
 ### unbind()
 
 ```python
-unbind(self) -> 'None'
+unbind() -> 'None'
 ```
 
 Unbind the socket to listen to all unreserved protocols.

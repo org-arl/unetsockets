@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Iterable, Optional, Sequence, Union
 
 from fjagepy import AgentID, Gateway, Message, Performative
-
 from .constants import Protocol, Services, Topics
 from .messages import AddressResolutionReq, DatagramNtf, DatagramReq, RxFrameNtf
 
 __all__ = ["UnetSocket"]
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 class UnetSocket:
     """High-level socket interface for UnetStack communication.
@@ -20,10 +22,7 @@ class UnetSocket:
     blocking receives on top of fjåge's Gateway.
 
     Attributes:
-        REQUEST_TIMEOUT (int): Default timeout for requests in milliseconds (1000).
-        hostname (str): Connected hostname.
-        port (int): Connected port number.
-        gw (Gateway | None): Underlying fjåge Gateway instance.
+        gw (Gateway): Underlying fjåge Gateway instance.
         localProtocol (int): Bound protocol number (-1 if unbound).
         remoteAddress (int): Default destination address (-1 if not connected).
         remoteProtocol (int): Default protocol for sending.
@@ -49,16 +48,13 @@ class UnetSocket:
     def __init__(
         self,
         hostname: str,
-        port: int = 1100,
-        *,
-        gateway_cls: type[Gateway] = Gateway,
+        port: int = 1100
     ) -> None:
         """Create a new UnetSocket connected to the specified host.
 
         Args:
             hostname: Hostname or IP address of the UnetStack node.
             port: TCP port number (default: 1100).
-            gateway_cls: Gateway class to use, for testing purposes.
 
         Example:
             >>> sock = UnetSocket("localhost", 1100)
@@ -66,16 +62,12 @@ class UnetSocket:
             232
             >>> sock.close()
         """
-        self.hostname = hostname
-        self.port = port
-        self._gateway_cls = gateway_cls
-        self.gw: Optional[Gateway] = gateway_cls(hostname, port)
+        self.gw = Gateway(hostname, port)
         self.localProtocol = -1
         self.remoteAddress = -1
         self.remoteProtocol = Protocol.DATA
         self.timeout = Gateway.BLOCKING
         self.provider: Optional[AgentID] = None
-        self.waiting = False
         self._subscribe_datagrams()
 
     def __enter__(self) -> "UnetSocket":
@@ -114,21 +106,13 @@ class UnetSocket:
         self.gw.close()
         self.gw = None
 
-    def is_closed(self) -> bool:
+    def isClosed(self) -> bool:
         """Check if the socket is closed.
 
         Returns:
             True if the socket has been closed, False otherwise.
         """
         return self.gw is None
-
-    def isClosed(self) -> bool:  # noqa: N802 - legacy API
-        """Check if the socket is closed (legacy API).
-
-        Returns:
-            True if the socket has been closed, False otherwise.
-        """
-        return self.is_closed()
 
     def bind(self, protocol: int) -> bool:
         """Bind the socket to listen for a specific protocol.
@@ -155,6 +139,7 @@ class UnetSocket:
         if protocol == Protocol.DATA or (Protocol.USER <= protocol <= Protocol.MAX):
             self.localProtocol = protocol
             return True
+        logger.error(f"Invalid protocol number {protocol} for binding")
         return False
 
     def unbind(self) -> None:
@@ -172,21 +157,13 @@ class UnetSocket:
 
         self.localProtocol = -1
 
-    def is_bound(self) -> bool:
+    def isBound(self) -> bool:
         """Check if the socket is bound to a protocol.
 
         Returns:
             True if bound to a specific protocol, False otherwise.
         """
         return self.localProtocol >= 0
-
-    def isBound(self) -> bool:  # noqa: N802 - legacy API
-        """Check if the socket is bound to a protocol (legacy API).
-
-        Returns:
-            True if bound to a specific protocol, False otherwise.
-        """
-        return self.is_bound()
 
     def connect(self, to: int, protocol: int = Protocol.DATA) -> bool:
         """Set the default destination address and protocol for sending.
@@ -214,6 +191,7 @@ class UnetSocket:
             self.remoteAddress = to
             self.remoteProtocol = protocol
             return True
+        logger.error(f"Invalid address {to} or protocol number {protocol} for connecting")
         return False
 
     def disconnect(self) -> None:
@@ -232,7 +210,7 @@ class UnetSocket:
         self.remoteAddress = -1
         self.remoteProtocol = 0
 
-    def is_connected(self) -> bool:
+    def isConnected(self) -> bool:
         """Check if a default destination is set.
 
         Returns:
@@ -240,15 +218,7 @@ class UnetSocket:
         """
         return self.remoteAddress >= 0
 
-    def isConnected(self) -> bool:  # noqa: N802 - legacy API
-        """Check if a default destination is set (legacy API).
-
-        Returns:
-            True if connected (default destination set), False otherwise.
-        """
-        return self.is_connected()
-
-    def getLocalAddress(self) -> int:  # noqa: N802 - legacy API
+    def getLocalAddress(self) -> int:
         """Get the local node address.
 
         Returns:
@@ -263,12 +233,14 @@ class UnetSocket:
             return -1
         nodeinfo = self.gw.agentForService(Services.NODE_INFO)
         if nodeinfo is None:
+            logger.error("No NODE_INFO service provider found.")
             return -1
         if nodeinfo.address is not None:
             return nodeinfo.address
+        logger.error("Unable to retrieve local node address.")
         return -1
 
-    def getLocalProtocol(self) -> int:  # noqa: N802 - legacy API
+    def getLocalProtocol(self) -> int:
         """Get the protocol number that the socket is bound to.
 
         Returns:
@@ -277,7 +249,7 @@ class UnetSocket:
 
         return self.localProtocol
 
-    def getRemoteAddress(self) -> int:  # noqa: N802 - legacy API
+    def getRemoteAddress(self) -> int:
         """Get the default destination node address.
 
         Returns:
@@ -286,7 +258,7 @@ class UnetSocket:
 
         return self.remoteAddress
 
-    def getRemoteProtocol(self) -> int:  # noqa: N802 - legacy API
+    def getRemoteProtocol(self) -> int:
         """Get the default transmission protocol number.
 
         Returns:
@@ -295,46 +267,23 @@ class UnetSocket:
 
         return self.remoteProtocol
 
-    def set_timeout(self, ms: int) -> None:
+    def setTimeout(self, ms: int) -> None:
         """Set the receive timeout.
 
         Args:
-            ms: Timeout in milliseconds. Use 0 for non-blocking,
-                negative values for blocking (wait forever).
-
-        Example:
-            >>> sock.set_timeout(5000)  # 5 second timeout
-            >>> sock.set_timeout(0)     # Non-blocking
-            >>> sock.set_timeout(-1)    # Blocking
+            ms: Timeout in milliseconds. 0 = non-blocking, -1 = blocking.
         """
         if ms < 0:
             ms = Gateway.BLOCKING
         self.timeout = ms
 
-    def setTimeout(self, ms: int) -> None:  # noqa: N802 - legacy API
-        """Set the receive timeout (legacy API).
-
-        Args:
-            ms: Timeout in milliseconds. Use 0 for non-blocking,
-                negative values for blocking (wait forever).
-        """
-        self.set_timeout(ms)
-
-    def get_timeout(self) -> int:
+    def getTimeout(self) -> int:
         """Get the current receive timeout.
 
         Returns:
             Timeout in milliseconds.
         """
         return self.timeout
-
-    def getTimeout(self) -> int:  # noqa: N802 - legacy API
-        """Get the current receive timeout (legacy API).
-
-        Returns:
-            Timeout in milliseconds.
-        """
-        return self.get_timeout()
 
     def send(
         self,
@@ -375,21 +324,22 @@ class UnetSocket:
         if req.recipient is None:
             provider = self._resolve_provider()
             if provider is None:
+                logger.error("No datagram service provider found. Not sending datagram.")
                 return False
             req.recipient = provider
 
         rsp = self.gw.request(req, self.REQUEST_TIMEOUT)
         return rsp is not None and rsp.perf == Performative.AGREE
 
-    def receive(self, timeout: Optional[int] = None):
+    def receive(self, timeout: Optional[int] = None) -> Optional[DatagramNtf]:
         """Receive a datagram sent to the local node.
 
         If the socket is bound, only receives datagrams matching the bound protocol.
         If unbound, receives datagrams with all unreserved protocols.
         Broadcast datagrams are always received.
 
-        This call blocks until a datagram is available, the socket timeout is reached,
-        or until cancel() is called.
+        This call blocks until a datagram is available, the socket timeout is reached.
+        There is currently no way to cancel a blocking receive.
 
         Args:
             timeout: Override timeout in milliseconds. Uses socket timeout if None.
@@ -408,8 +358,8 @@ class UnetSocket:
         if self.gw is None:
             return None
 
-        def _matches(ntf):
-            if not isinstance(ntf, (DatagramNtf, RxFrameNtf)):
+        def _matches(ntf) -> bool:
+            if ntf == None or not isinstance(ntf, DatagramNtf):
                 return False
             proto = getattr(ntf, "protocol", Protocol.DATA)
             if proto != Protocol.DATA and proto < Protocol.USER:
@@ -417,35 +367,12 @@ class UnetSocket:
             return self.localProtocol < 0 or self.localProtocol == proto
 
         effective_timeout = self._effective_timeout(timeout)
-        self.waiting = effective_timeout == Gateway.BLOCKING or effective_timeout > 0
         try:
             return self.gw.receive(_matches, effective_timeout)
-        finally:
-            self.waiting = False
+        except Exception as e:
+            logger.error(f"Failed to receive datagram", exc_info=True)
 
-    def cancel(self) -> None:
-        """Cancel an ongoing blocking receive() call.
-
-        This method can be called from another thread to unblock a waiting
-        receive() call.
-
-        Example:
-            >>> import threading
-            >>> def canceller():
-            ...     time.sleep(2)
-            ...     sock.cancel()
-            >>> thread = threading.Thread(target=canceller)
-            >>> thread.start()
-            >>> ntf = sock.receive()  # Will be cancelled after 2 seconds
-        """
-
-        if self.waiting and self.gw is not None:
-            self.gw.cancel = True
-            self.gw.cv.acquire()
-            self.gw.cv.notify()
-            self.gw.cv.release()
-
-    def getGateway(self) -> Optional[Gateway]:  # noqa: N802 - legacy API
+    def getGateway(self) -> Optional[Gateway]:
         """Get the underlying fjåge Gateway for low-level access.
 
         Returns:
@@ -458,7 +385,7 @@ class UnetSocket:
 
         return self.gw
 
-    def agentForService(self, svc):  # noqa: N802 - legacy API
+    def agentForService(self, svc) -> Optional[AgentID]:
         """Get an agent providing the specified service.
 
         Args:
@@ -476,7 +403,7 @@ class UnetSocket:
             return None
         return self.gw.agentForService(svc)
 
-    def agentsForService(self, svc):  # noqa: N802 - legacy API
+    def agentsForService(self, svc) -> Optional[Iterable[AgentID]]:
         """Get all agents providing the specified service.
 
         Args:
@@ -490,7 +417,7 @@ class UnetSocket:
             return None
         return self.gw.agentsForService(svc)
 
-    def agent(self, name: str):
+    def agent(self, name: str) -> Optional[AgentID]:
         """Get an agent by name.
 
         Args:
@@ -508,7 +435,7 @@ class UnetSocket:
             return None
         return self.gw.agent(name)
 
-    def host(self, nodeName: str):
+    def host(self, nodeName: str) -> Optional[int]:
         """Resolve a node name to its address.
 
         Args:
@@ -526,14 +453,18 @@ class UnetSocket:
 
         arp = self.agentForService(Services.ADDRESS_RESOLUTION)
         if arp is None:
+            logger.error("No ADDRESS_RESOLUTION service provider found.")
             return None
         req = AddressResolutionReq()
         req.name = nodeName
         req.recipient = arp
         rsp = self.gw.request(req, self.REQUEST_TIMEOUT)
         if rsp is None:
+            logger.error(f"Address resolution request timed out for node '{nodeName}'")
             return None
         return rsp.address
+
+## Internal helper methods
 
     def _build_datagram_request(
         self,
@@ -543,6 +474,7 @@ class UnetSocket:
     ) -> Optional[DatagramReq]:
         if isinstance(data, Message):
             if not isinstance(data, DatagramReq):
+                logger.error("Message provided is not a DatagramReq")
                 return None
             req = data
             payload = getattr(req, "data", None)
@@ -556,12 +488,14 @@ class UnetSocket:
             destination = to if to is not None else self.remoteAddress
             proto = protocol if protocol is not None else self.remoteProtocol
             if destination < 0:
+                logger.error("No destination address specified for sending datagram")
                 return None
             req.to = destination
             req.protocol = proto
         if req.protocol != Protocol.DATA and (
             req.protocol < Protocol.USER or req.protocol > Protocol.MAX
         ):
+            logger.error(f"Invalid protocol number {req.protocol} for sending datagram")
             return None
         return req
 

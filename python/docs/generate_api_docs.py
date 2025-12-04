@@ -57,7 +57,10 @@ def get_class_info(cls) -> dict[str, Any]:
             doc = inspect.getdoc(method) or ""
             sig = ""
             try:
-                sig = str(inspect.signature(method))
+                full_sig = inspect.signature(method)
+                # Remove 'self' parameter from method signatures
+                params = [p for p in full_sig.parameters.values() if p.name != "self"]
+                sig = str(full_sig.replace(parameters=params))
             except (ValueError, TypeError):
                 pass
             info["methods"].append({
