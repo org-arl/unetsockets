@@ -102,3 +102,11 @@ Run the unit tests with:
 ```bash
 pytest
 ```
+
+## Documentation
+
+Detailed documentation is available in the [`docs/`](docs/) directory.
+
+## License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](../../LICENSE) file for details.

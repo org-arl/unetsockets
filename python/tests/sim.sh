@@ -17,5 +17,10 @@ if [ "$1" == "start" ]; then
 fi
 
 if [ "$1" == "stop" ]; then
+  # First, try to gracefully terminate the processes
+  for pid in $(pgrep -f "java.*unet"); do kill -15 $pid > /dev/null 2>&1; done
+  # Wait for processes to exit
+  sleep 5
+  # Force kill any remaining processes
   for pid in $(pgrep -f "java.*unet"); do kill -9 $pid > /dev/null 2>&1; done
 fi

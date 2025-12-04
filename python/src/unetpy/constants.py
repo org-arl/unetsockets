@@ -80,6 +80,7 @@ class Topics:
     Attributes:
         PARAMCHANGE: Topic for parameter change notifications.
         LIFECYCLE: Topic for abnormal agent termination notifications.
+        DATAGRAM: Topic for incoming datagram notification.
 
     Example:
         >>> gw.subscribe(gw.topic(Topics.PARAMCHANGE))
