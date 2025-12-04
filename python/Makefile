@@ -11,7 +11,7 @@ upload: build
 	twine upload --repository pypi dist/*
 
 test:
-	pytest tests/
+	pytest -o log_cli=true -o log_cli_level=DEBUG tests/
 
 clean:
 	rm -rf build/ dist/ unetsockets.egg-info/ python/docs/api/

@@ -326,6 +326,7 @@ class UnetSocket:
             if provider is None:
                 logger.error("No datagram service provider found. Not sending datagram.")
                 return False
+            logger.debug(f"Using {provider} as datagram service provider.")
             req.recipient = provider
 
         rsp = self.gw.request(req, self.REQUEST_TIMEOUT)
@@ -362,11 +363,13 @@ class UnetSocket:
             if ntf == None or not isinstance(ntf, DatagramNtf):
                 return False
             proto = getattr(ntf, "protocol", Protocol.DATA)
+            logger.debug(f"Checking if received datagram [{ntf} protocol={proto}] matches")
             if proto != Protocol.DATA and proto < Protocol.USER:
                 return False
             return self.localProtocol < 0 or self.localProtocol == proto
 
         effective_timeout = self._effective_timeout(timeout)
+        logger.debug(f"Trying to receive datagram for up to {effective_timeout} ms")
         try:
             return self.gw.receive(_matches, effective_timeout)
         except Exception as e:
@@ -497,6 +500,7 @@ class UnetSocket:
         ):
             logger.error(f"Invalid protocol number {req.protocol} for sending datagram")
             return None
+        logger.debug(f"Built [{req} protocol={req.protocol}, to={req.to}, data=({len(req.data)} bytes)] for sending")
         return req
 
     def _normalize_payload(

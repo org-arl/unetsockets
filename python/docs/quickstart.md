@@ -184,6 +184,29 @@ x_back, y_back = to_local(origin, lat, lon)
 print(f"Local: {x_back}, {y_back}")
 ```
 
+## Logging and Debugging
+
+This library uses the standard [Python logging](https://docs.python.org/3/library/logging.html) system.
+
+By default, the library does not emit logs to the console.
+
+To see logs, configure Python’s logging in your application:
+
+```python
+import logging
+
+# Show all logs on stdout
+logging.basicConfig(level=logging.DEBUG)
+
+# Or, enable only logs from this library
+logging.getLogger("fjagepy").setLevel(logging.DEBUG)
+```
+
+For troubleshooting, you can also send logs to a file:
+```python
+logging.basicConfig(filename="debug.log", level=logging.DEBUG)
+```
+
 ## Next Steps
 
 - See the [API Reference](api/index.md) for detailed documentation
