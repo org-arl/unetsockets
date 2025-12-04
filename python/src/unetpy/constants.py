@@ -87,6 +87,7 @@ class Topics:
 
     PARAMCHANGE = "org.arl.unet.Topics.PARAMCHANGE"
     LIFECYCLE = "org.arl.unet.Topics.LIFECYCLE"
+    DATAGRAM = 'org.arl.unet.Topics.DATAGRAM'        # Topic for incoming datagram notification.
 
 
 class Protocol:

@@ -6,7 +6,7 @@ from typing import Iterable, Optional, Sequence, Union
 
 from fjagepy import AgentID, Gateway, Message, Performative
 
-from .constants import Protocol, Services
+from .constants import Protocol, Services, Topics
 from .messages import AddressResolutionReq, DatagramNtf, DatagramReq, RxFrameNtf
 
 __all__ = ["UnetSocket"]
@@ -87,6 +87,9 @@ class UnetSocket:
     def _subscribe_datagrams(self) -> None:
         if self.gw is None:
             return
+        # for new UnetStack versions (5.2.0 and later)
+        self.gw.subscribe(self.gw.topic(Topics.DATAGRAM))
+        # for compatibility with older UnetStack versions (before 5.2.0)
         agents: Iterable[AgentID] = self.gw.agentsForService(Services.DATAGRAM) or []
         for agent in agents:
             self.gw.subscribe(self.gw.topic(agent))
