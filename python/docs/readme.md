@@ -42,30 +42,3 @@ with UnetSocket("localhost", 1100) as sock:
     if ntf:
         print(f"Received: {ntf.data}")
 ```
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                  Your Application               │
-├─────────────────────────────────────────────────┤
-│                    UnetSocket                   │
-│         (high-level datagram socket API)        │
-├─────────────────────────────────────────────────┤
-│                     Gateway                     │
-│            (fjåge messaging layer)              │
-├─────────────────────────────────────────────────┤
-│               TCP/WebSocket                     │
-│          (transport to UnetStack)               │
-├─────────────────────────────────────────────────┤
-│         UnetStack Modem/Simulator               │
-└─────────────────────────────────────────────────┘
-```
-
-## Version
-
-Current version: **4.0.0**
-
-## License
-
-BSD-3-Clause

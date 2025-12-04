@@ -152,6 +152,7 @@ various system events.
 |-----------|-------------|
 | `PARAMCHANGE` | Topic for parameter change notifications. |
 | `LIFECYCLE` | Topic for abnormal agent termination notifications. |
+| `DATAGRAM` | Topic for incoming datagram notification. |
 
 **Example:**
 
@@ -165,6 +166,7 @@ various system events.
 |----------|-------|
 | `Topics.PARAMCHANGE` | `'org.arl.unet.Topics.PARAMCHANGE'` |
 | `Topics.LIFECYCLE` | `'org.arl.unet.Topics.LIFECYCLE'` |
+| `Topics.DATAGRAM` | `'org.arl.unet.Topics.DATAGRAM'` |
 
 ---
 

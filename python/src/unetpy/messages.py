@@ -72,8 +72,6 @@ LinkStatusNtf = MessageClass("org.arl.unet.link.LinkStatusNtf")
 # localization
 RangeNtf = MessageClass("org.arl.unet.localization.RangeNtf")
 RangeReq = MessageClass("org.arl.unet.localization.RangeReq")
-# BeaconReq intentionally defined twice to mirror legacy API behaviour.
-BeaconReq = MessageClass("org.arl.unet.localization.BeaconReq")
 RespondReq = MessageClass("org.arl.unet.localization.RespondReq")
 InterrogationNtf = MessageClass("org.arl.unet.localization.InterrogationNtf")
 
