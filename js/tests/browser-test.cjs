@@ -5,7 +5,7 @@ const process = require('process');
 const puppeteer = require('puppeteer');
 const statik = require('node-static');
 
-console.log('\nSetting up local static server at http://localhost:8000/test');
+console.log('\nSetting up local static server at http://localhost:8000/tests');
 const file = new statik.Server('.');
 let server = require('http').createServer(function (request, response) {
   request.addListener('end', function () {
@@ -24,7 +24,7 @@ if (process.argv.includes('-m')) {
       msg.type() == 'error' && console.log('PAGE ERR:', msg.text());
       msg.type() == 'warning' && console.log('PAGE WARN:', msg.text());
     });
-    await page.goto('http://localhost:8000/test', {waitUntil: 'networkidle2'});
+    await page.goto('http://localhost:8000/tests', {waitUntil: 'networkidle2'});
     await page.waitForSelector('.jasmine-overall-result');
     const classList = await page.$eval('.jasmine-overall-result', (el) => el.classList);
     const classes = Object.values(classList);
