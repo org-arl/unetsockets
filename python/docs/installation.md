@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Python 3.8 or higher
+- Python 3.9 or higher
 - fjagepy >= 2.0.0
 
 ## From PyPI
