@@ -16,7 +16,6 @@ The script will create/update the following files:
 
 from __future__ import annotations
 
-import ast
 import inspect
 import re
 import sys
