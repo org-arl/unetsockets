@@ -132,6 +132,7 @@ class Topics:
     """
     PARAMCHANGE = 'org.arl.unet.Topics.PARAMCHANGE'  # Topic for parameter change notification.
     LIFECYCLE = 'org.arl.unet.Topics.LIFECYCLE'      # Topic for abnormal agent termination.
+    DATAGRAM = 'org.arl.unet.Topics.DATAGRAM'        # Topic for incoming datagram notification.
 
 class Protocol:
     """Well-known protocol number assignments.
@@ -190,6 +191,9 @@ class UnetSocket():
     def init(self):
         """Creates a socket.
         """
+        # for new UnetStack versions (5.2.0 and later)
+        self.gw.subscribe(self.gw.topic(Topics.DATAGRAM))
+        # for compatibility with older UnetStack versions (before 5.2.0)
         alist = self.gw.agentsForService(Services.DATAGRAM)
         for a in alist:
             self.gw.subscribe(self.gw.topic(a))
