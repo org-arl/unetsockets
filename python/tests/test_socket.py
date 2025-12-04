@@ -191,7 +191,7 @@ class TestUnetSocketTimeout:
         sock = UnetSocket(NODE_A_HOST, NODE_A_PORT)
         try:
             sock.bind(0)
-            # Initial timeout is 0 after setting it
+            # Set timeout to 0 for non-blocking mode
             sock.setTimeout(0)
             assert sock.getTimeout() == 0
 
