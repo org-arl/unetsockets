@@ -6,6 +6,12 @@ pattern="tests/unet/unet-*"
 files=($pattern)
 DIR=${files[0]}
 
+# If JAVA_HOME env variable is not set, throw an error
+if [ -z "$JAVA_HOME" ]; then
+  echo "No JAVA_HOME found. Please make sure JDK8 is installed for running the simulator."
+  exit 1
+fi
+
 if [ "$1" == "start" ]; then
   "$DIR"/bin/unet tests/"$TEST_SCRIPT" > /dev/null 2>&1 &
 fi
