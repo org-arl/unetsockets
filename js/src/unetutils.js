@@ -1,4 +1,4 @@
-import {AgentID, MessageClass, Services, Gateway} from 'fjage';
+import {AgentID, MessageClass, Services, Gateway, PutFileReq, GetFileReq, GetFileRsp, ShellExecReq} from 'fjage';
 
 const DatagramReq = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf = MessageClass('org.arl.unet.DatagramNtf');
@@ -50,6 +50,13 @@ let Protocol = {
  * @typedef {Object.<string, MessageClass>} UnetMessages
  */
 let UnetMessages = {
+
+  // fjage
+  'PutFileReq'             : PutFileReq,
+  'GetFileReq'             : GetFileReq,
+  'GetFileRsp'             : GetFileRsp,
+  'ShellExecReq'           : ShellExecReq,
+
   // unet
   'TestReportNtf'          : MessageClass('org.arl.unet.TestReportNtf'),
   'AbnormalTerminationNtf' : MessageClass('org.arl.unet.AbnormalTerminationNtf'),
