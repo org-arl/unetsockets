@@ -272,12 +272,7 @@ def generate_messages_docs() -> str:
         "from unetpy import DatagramReq, DatagramNtf, RxFrameNtf",
         "```",
         "",
-        format_docstring_as_markdown(get_module_docstring(messages)),
-        "",
-        "---",
-        "",
-        "## Available Messages",
-        "",
+        format_docstring_as_markdown(get_module_docstring(messages))
     ]
 
     # Group messages by category

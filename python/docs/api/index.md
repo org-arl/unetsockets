@@ -107,3 +107,9 @@ The following classes are re-exported from `fjagepy` for convenience:
 - `Message` - Base message class
 - `MessageClass` - Factory for creating message types
 - `Performative` - Message performatives (AGREE, REFUSE, etc.)
+- `ParameterReq` - Request for a parameter value
+- `ParameterRsp` - Response with a parameter value
+- `PutFileReq` - Request to upload a file
+- `GetFileReq` - Request to download a file
+- `ShellExecReq` - Request to execute a shell command
+- `GetFileRsp` - Response with file contents

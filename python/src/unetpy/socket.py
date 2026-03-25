@@ -542,7 +542,7 @@ class UnetSocket:
                 if ntf is None or not isinstance(ntf, DatagramNtf):
                     return False
                 to = getattr(ntf, "to", -1)
-                if to != localAddress and to != Address.    :
+                if to != localAddress and to != Address.BROADCAST:
                     return False
                 proto = getattr(ntf, "protocol", Protocol.DATA)
                 logger.debug(f"Checking if received datagram [{ntf} protocol={proto}] matches")

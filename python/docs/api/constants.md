@@ -33,32 +33,6 @@ Protocol numbers identify the type of data in a datagram. Numbers 1-31
 are reserved for UnetStack internal use. User applications should use
 Protocol.DATA (0) or Protocol.USER (32) through Protocol.MAX (63).
 
-
-**Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `DATA` | User application data (0). |
-| `RANGING` | Reserved for ranging agents (1). |
-| `LINK` | Reserved for link agents (2). |
-| `REMOTE` | Reserved for remote management agents (3). |
-| `MAC` | Reserved for MAC protocol agents (4). |
-| `ROUTING` | Reserved for routing agents (5). |
-| `TRANSPORT` | Reserved for transport agents (6). |
-| `ROUTE_MAINTENANCE` | Reserved for route maintenance agents (7). |
-| `LINK2` | Reserved for secondary link agents (8). |
-| `USER` | Lowest protocol number for user protocols (32). |
-| `MAX` | Maximum protocol number (63). |
-
-**Example:**
-
-```python
-    >>> sock.bind(Protocol.USER)
-    >>> sock.send(data, to=31, protocol=Protocol.USER)
-    >>> # Custom user protocol
-    >>> MY_PROTOCOL = Protocol.USER + 5  # = 37
-```
-
 ### Values
 
 | Constant | Value |
@@ -84,28 +58,6 @@ Service identifiers for looking up agents.
 Agents can be looked up based on the services they provide. This class
 extends the base fjåge Services with UnetStack-specific service identifiers.
 
-
-**Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `NODE_INFO` | Node information service - provides node address and name. |
-| `ADDRESS_RESOLUTION` | Address resolution service - resolves node names. |
-| `DATAGRAM` | Datagram service - handles datagram transmission. |
-| `PHYSICAL` | Physical layer service - low-level frame transmission. |
-| `RANGING` | Ranging/localization service - distance measurements. |
-| `BASEBAND` | Baseband signal service - raw signal access. |
-| `LINK` | Link layer service - reliable point-to-point links. |
-| `MAC` | MAC protocol service - medium access control. |
-| `ROUTING` | Routing service - multi-hop routing. |
-| `ROUTE_MAINTENANCE` | Route maintenance service. |
-| `TRANSPORT` | Transport layer service - reliable transport. |
-| `REMOTE` | Remote access service - remote command execution. |
-| `STATE_MANAGER` | State management service. |
-| `DEVICE_INFO` | Device information service. |
-| `DOA` | Direction of arrival service. |
-| `SCHEDULER` | Sleep scheduler service. |
-| `SHELL` | Shell service (inherited from fjåge). |
 
 **Example:**
 
@@ -146,14 +98,6 @@ These topics can be subscribed to for receiving notifications about
 various system events.
 
 
-**Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `PARAMCHANGE` | Topic for parameter change notifications. |
-| `LIFECYCLE` | Topic for abnormal agent termination notifications. |
-| `DATAGRAM` | Topic for incoming datagram notification. |
-
 **Example:**
 
 ```python
@@ -177,17 +121,6 @@ Status indicators for MAC channel reservation.
 These values indicate the status of a channel reservation request
 during the MAC reservation process.
 
-
-**Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `START` | Start of channel reservation. |
-| `END` | End of channel reservation. |
-| `FAILURE` | Failed to reserve channel. |
-| `CANCEL` | Reservation cancelled. |
-| `REQUEST` | Request for information from client agent. |
-
 ### Values
 
 | Constant | Value |
@@ -204,12 +137,6 @@ during the MAC reservation process.
 
 Special address constants.
 
-
-**Attributes:**
-
-| Attribute | Description |
-|-----------|-------------|
-| `BROADCAST` | Broadcast address (0) - sends to all nodes. |
 
 **Example:**
 

@@ -329,6 +329,66 @@ Get the protocol number that the socket is bound to.
 
 ---
 
+### getMessageClass()
+
+```python
+getMessageClass() -> 'Optional[str]'
+```
+
+Get the message class for outgoing datagrams.
+
+
+**Returns:**
+
+    Message class string, or None if not set.
+
+---
+
+### getMimeType()
+
+```python
+getMimeType() -> 'Optional[str]'
+```
+
+Get the MIME type for outgoing datagrams.
+
+
+**Returns:**
+
+    MIME type string, or None if not set.
+
+---
+
+### getPriority()
+
+```python
+getPriority() -> 'int'
+```
+
+Get the priority level for outgoing datagrams.
+
+
+**Returns:**
+
+    Priority level.
+
+---
+
+### getReliability()
+
+```python
+getReliability() -> 'Optional[bool]'
+```
+
+Get the reliability setting for outgoing datagrams.
+
+
+**Returns:**
+
+    True if reliable, False if unreliable, None if not set.
+
+---
+
 ### getRemoteAddress()
 
 ```python
@@ -359,18 +419,93 @@ Get the default transmission protocol number.
 
 ---
 
+### getRemoteRecipient()
+
+```python
+getRemoteRecipient() -> 'Optional[str]'
+```
+
+Get the remote recipient for outgoing datagrams.
+
+
+**Returns:**
+
+    Remote recipient string, or None if not set.
+
+---
+
+### getRobustness()
+
+```python
+getRobustness() -> 'int'
+```
+
+Get the robustness level for outgoing datagrams.
+
+
+**Returns:**
+
+    Robustness level.
+
+---
+
+### getRoute()
+
+```python
+getRoute() -> 'Optional[str]'
+```
+
+Get the route for outgoing datagrams.
+
+
+**Returns:**
+
+    Route string, or None if not set.
+
+---
+
+### getSendMode()
+
+```python
+getSendMode() -> 'int'
+```
+
+Get the send mode for datagram transmission.
+
+
+**Returns:**
+
+    Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
+
+---
+
 ### getTimeout()
 
 ```python
 getTimeout() -> 'int'
 ```
 
-Get the current receive timeout.
+Gets the timeout for datagram reception.
 
 
 **Returns:**
 
-    Timeout in milliseconds.
+    Timeout in milliseconds. 0 = non-blocking, -1 = blocking.
+
+---
+
+### getTtl()
+
+```python
+getTtl() -> 'float'
+```
+
+Get the Time-To-Live (TTL) for outgoing datagrams.
+
+
+**Returns:**
+
+    TTL value, or NaN if not set.
 
 ---
 
@@ -524,6 +659,159 @@ and cannot be used for sending.
 
 ---
 
+### setMessageClass()
+
+```python
+setMessageClass(messageClass: 'Optional[str]') -> 'None'
+```
+
+Set the message class for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `messageClass` | Message class string, or None to unset. |
+
+---
+
+### setMimeType()
+
+```python
+setMimeType(mimeType: 'Optional[str]') -> 'None'
+```
+
+Set the MIME type for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `mimeType` | MIME type string, or None to unset. |
+
+---
+
+### setPriority()
+
+```python
+setPriority(priority: 'int') -> 'None'
+```
+
+Set the priority level for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `priority` | Priority level. |
+
+**Example:**
+
+```python
+    >>> sock.setPriority(Priority.HIGH)
+```
+
+---
+
+### setReliability()
+
+```python
+setReliability(reliable: 'Optional[bool]') -> 'None'
+```
+
+Set the reliability for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `reliable` | True for reliable, False for unreliable, None to unset. |
+
+---
+
+### setRemoteRecipient()
+
+```python
+setRemoteRecipient(remoteRecipient: 'Optional[str]') -> 'None'
+```
+
+Set the remote recipient for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `remoteRecipient` | Remote recipient string, or None to unset. |
+
+---
+
+### setRobustness()
+
+```python
+setRobustness(robustness: 'int') -> 'None'
+```
+
+Set the robustness level for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `robustness` | Robustness level. |
+
+**Example:**
+
+```python
+    >>> sock.setRobustness(Robustness.ROBUST)
+```
+
+---
+
+### setRoute()
+
+```python
+setRoute(route: 'Optional[str]') -> 'None'
+```
+
+Set the route for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `route` | Route string, or None to unset. |
+
+---
+
+### setSendMode()
+
+```python
+setSendMode(mode: 'int') -> 'None'
+```
+
+Set the send mode for datagram transmission. NON_BLOCKING mode makes a
+request to send data, but does not wait for acceptance or transmission.
+BLOCKING mode waits until the data is transmitted. If the socket is reliable,
+waits until delivery is acknowledged or fails. SEMI_BLOCKING mode waits until
+the data is accepted for transmission, but does not wait for actual transmission
+for unreliable sockets.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `mode` | Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking. |
+
+---
+
 ### setTimeout()
 
 ```python
@@ -538,6 +826,23 @@ Set the receive timeout.
 | Parameter | Description |
 |-----------|-------------|
 | `ms` | Timeout in milliseconds. 0 = non-blocking, -1 = blocking. |
+
+---
+
+### setTtl()
+
+```python
+setTtl(ttl: 'float') -> 'None'
+```
+
+Set the Time-To-Live (TTL) for outgoing datagrams.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `ttl` | TTL value. Use NaN to unset. |
 
 ---
 
