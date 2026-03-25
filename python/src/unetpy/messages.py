@@ -29,6 +29,12 @@ ParamChangeNtf = MessageClass("org.arl.unet.ParamChangeNtf")
 RefuseRsp = MessageClass("org.arl.unet.RefuseRsp")
 FailureNtf = MessageClass("org.arl.unet.FailureNtf")
 
+#remote
+
+RemoteSuccessNtf = MessageClass("org.arl.unet.remote.RemoteSuccessNtf")
+
+
+
 # net
 DatagramTraceReq = MessageClass("org.arl.unet.net.DatagramTraceReq")
 RouteDiscoveryReq = MessageClass("org.arl.unet.net.RouteDiscoveryReq")
@@ -85,14 +91,16 @@ RxAckNtf = MessageClass("org.arl.unet.mac.RxAckNtf")
 TxAckReq = MessageClass("org.arl.unet.mac.TxAckReq")
 
 # remote
-RemoteExecReq = MessageClass("org.arl.unet.remote.RemoteExecReq")
-RemoteFailureNtf = MessageClass("org.arl.unet.remote.RemoteFailureNtf")
 RemoteFileGetReq = MessageClass("org.arl.unet.remote.RemoteFileGetReq")
 RemoteFileNtf = MessageClass("org.arl.unet.remote.RemoteFileNtf")
 RemoteFilePutReq = MessageClass("org.arl.unet.remote.RemoteFilePutReq")
-RemoteSuccessNtf = MessageClass("org.arl.unet.remote.RemoteSuccessNtf")
-RemoteTextNtf = MessageClass("org.arl.unet.remote.RemoteTextNtf")
-RemoteTextReq = MessageClass("org.arl.unet.remote.RemoteTextReq")
+RemoteFailureNtf = MessageClass("org.arl.unet.remote.RemoteFailureNtf", DatagramFailureNtf)
+RemoteSuccessNtf = MessageClass("org.arl.unet.remote.RemoteSuccessNtf", DatagramDeliveryNtf)
+RemoteMessageReq = MessageClass("org.arl.unet.remote.RemoteMessageReq", DatagramReq)
+RemoteMessageNtf = MessageClass("org.arl.unet.remote.RemoteMessageNtf", DatagramNtf)
+RemoteTextNtf = MessageClass("org.arl.unet.remote.RemoteTextNtf", RemoteMessageNtf)
+RemoteTextReq = MessageClass("org.arl.unet.remote.RemoteTextReq", RemoteMessageReq)
+RemoteExecReq = MessageClass("org.arl.unet.remote.RemoteExecReq", RemoteMessageReq)
 
 # scheduler
 AddScheduledSleepReq = MessageClass("org.arl.unet.scheduler.AddScheduledSleepReq")

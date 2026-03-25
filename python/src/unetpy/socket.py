@@ -6,13 +6,20 @@ import logging
 from typing import Iterable, Optional, Sequence, Union, Callable
 
 from fjagepy import AgentID, Gateway, Message, Performative
-from .constants import Protocol, Services, Topics, Address
-from .messages import AddressResolutionReq, DatagramNtf, DatagramReq
+from .constants import Protocol, Services, Topics, Address, Priority, Robustness
+from .messages import AddressResolutionReq, DatagramNtf, DatagramReq, RemoteMessageReq
 
 __all__ = ["UnetSocket"]
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+# When used as a send mode, indicates semi-blocking send().
+# Waits until the data is accepted for transmission, but does
+# not wait for actual transmission for unreliable sockets.
+# If the socket is reliable, waits until delivery is acknowledged
+# or fails. Not a valid timeout value for receive().
+Gateway.SEMI_BLOCKING = -2;
 
 class UnetSocket:
     """High-level socket interface for UnetStack communication.
@@ -63,11 +70,21 @@ class UnetSocket:
             >>> sock.close()
         """
         self.gw = Gateway(hostname, port)
+        self.sendMode = Gateway.SEMI_BLOCKING
         self.localProtocol = -1
         self.remoteAddress = -1
         self.remoteProtocol = Protocol.DATA
         self.timeout = Gateway.BLOCKING
         self.provider: Optional[AgentID] = None
+        self.ttl = float('nan')
+        self.priority = Priority.NORMAL;
+        self.robustness = Robustness.NORMAL;
+        self.reliability : Optional[bool] = None;
+        self.route : Optional[str] = None;
+        self.mimeType : Optional[str]  = None;
+        self.messageClass : Optional[str]  = None;
+        self.remoteRecipient : Optional[str] = None;
+        self.mailbox : Optional[str] = None;
         self._subscribe_datagrams()
 
     def __enter__(self) -> "UnetSocket":
@@ -278,12 +295,173 @@ class UnetSocket:
         self.timeout = ms
 
     def getTimeout(self) -> int:
-        """Get the current receive timeout.
+        """Gets the timeout for datagram reception.
 
         Returns:
-            Timeout in milliseconds.
+            Timeout in milliseconds. 0 = non-blocking, -1 = blocking.
         """
         return self.timeout
+
+    def getSendMode(self) -> int:
+        """Get the send mode for datagram transmission.
+
+        Returns:
+            Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
+        """
+        return self.sendMode
+
+    def setSendMode(self, mode: int) -> None:
+        """Set the send mode for datagram transmission. NON_BLOCKING mode makes a
+        request to send data, but does not wait for acceptance or transmission.
+        BLOCKING mode waits until the data is transmitted. If the socket is reliable,
+        waits until delivery is acknowledged or fails. SEMI_BLOCKING mode waits until
+        the data is accepted for transmission, but does not wait for actual transmission
+        for unreliable sockets.
+
+        Args:
+            mode: Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
+        """
+        self.sendMode = mode
+
+    def getTtl(self) -> float:
+        """Get the Time-To-Live (TTL) for outgoing datagrams.
+
+        Returns:
+            TTL value, or NaN if not set.
+        """
+        return self.ttl
+
+    def setTtl(self, ttl: float) -> None:
+        """Set the Time-To-Live (TTL) for outgoing datagrams.
+
+        Args:
+            ttl: TTL value. Use NaN to unset.
+        """
+        self.ttl = ttl
+
+    def getPriority(self) -> int:
+        """Get the priority level for outgoing datagrams.
+
+        Returns:
+            Priority level.
+        """
+        return self.priority
+
+    def setPriority(self, priority: int) -> None:
+        """Set the priority level for outgoing datagrams.
+
+        Args:
+            priority: Priority level.
+
+        Example:
+            >>> sock.setPriority(Priority.HIGH)
+        """
+        if priority < Priority.URGENT or priority > Priority.IDLE:
+            logger.error(f"Invalid priority level {priority}. Must be between {Priority.URGENT} and {Priority.IDLE}.")
+            return
+        self.priority = priority
+
+    def getRobustness(self) -> int:
+        """Get the robustness level for outgoing datagrams.
+
+        Returns:
+            Robustness level.
+        """
+        return self.robustness
+
+    def setRobustness(self, robustness: int) -> None:
+        """Set the robustness level for outgoing datagrams.
+
+        Args:
+            robustness: Robustness level.
+        Example:
+            >>> sock.setRobustness(Robustness.ROBUST)
+        """
+        if robustness < Robustness.ROBUST or robustness > Robustness.ROBUST:
+            logger.error(f"Invalid robustness level {robustness}. Must be between {Robustness.ROBUST} and {Robustness.ROBUST}.")
+            return
+        self.robustness = robustness
+
+    def getReliability(self) -> Optional[bool]:
+        """Get the reliability setting for outgoing datagrams.
+
+        Returns:
+            True if reliable, False if unreliable, None if not set.
+        """
+        return self.reliability
+
+    def setReliability(self, reliable: Optional[bool]) -> None:
+        """Set the reliability for outgoing datagrams.
+
+        Args:
+            reliable: True for reliable, False for unreliable, None to unset.
+        """
+        self.reliability = reliable
+
+    def getRoute(self) -> Optional[str]:
+        """Get the route for outgoing datagrams.
+
+        Returns:
+            Route string, or None if not set.
+        """
+        return self.route
+
+    def setRoute(self, route: Optional[str]) -> None:
+        """Set the route for outgoing datagrams.
+
+        Args:
+            route: Route string, or None to unset.
+        """
+        self.route = route
+
+    def getMimeType(self) -> Optional[str]:
+        """Get the MIME type for outgoing datagrams.
+
+        Returns:
+            MIME type string, or None if not set.
+        """
+        return self.mimeType
+
+    def setMimeType(self, mimeType: Optional[str]) -> None:
+        """Set the MIME type for outgoing datagrams.
+
+        Args:
+            mimeType: MIME type string, or None to unset.
+        """
+        self.mimeType = mimeType
+
+    def getMessageClass(self) -> Optional[str]:
+        """Get the message class for outgoing datagrams.
+
+        Returns:
+            Message class string, or None if not set.
+        """
+        return self.messageClass
+
+    def setMessageClass(self, messageClass: Optional[str]) -> None:
+        """Set the message class for outgoing datagrams.
+
+        Args:
+            messageClass: Message class string, or None to unset.
+        """
+        self.messageClass = messageClass
+
+    def getRemoteRecipient(self) -> Optional[str]:
+        """Get the remote recipient for outgoing datagrams.
+
+        Returns:
+            Remote recipient string, or None if not set.
+        """
+        return self.remoteRecipient
+
+    def setRemoteRecipient(self, remoteRecipient: Optional[str]) -> None:
+        """Set the remote recipient for outgoing datagrams.
+
+        Args:
+            remoteRecipient: Remote recipient string, or None to unset.
+        """
+        self.remoteRecipient = remoteRecipient
+
 
     def send(
         self,
@@ -364,7 +542,7 @@ class UnetSocket:
                 if ntf is None or not isinstance(ntf, DatagramNtf):
                     return False
                 to = getattr(ntf, "to", -1)
-                if to != localAddress and to != Address.BROADCAST:
+                if to != localAddress and to != Address.    :
                     return False
                 proto = getattr(ntf, "protocol", Protocol.DATA)
                 logger.debug(f"Checking if received datagram [{ntf} protocol={proto}] matches")
@@ -492,7 +670,22 @@ class UnetSocket:
             elif isinstance(payload, str):
                 req.data = list(payload.encode("utf-8"))
         else:
-            req = DatagramReq()
+            if (self.mimeType is None and self.messageClass is None and self.remoteRecipient is None and self.mailbox is None):
+                req = DatagramReq()
+            else:
+                req = RemoteMessageReq()
+                if (self.mimeType is not None):
+                    req.mimeType = self.mimeType;
+                req.messageClass = self.messageClass
+                req.remoteRecipient = self.remoteRecipient
+                req.mailbox = self.mailbox
+            req.ttl = self.ttl
+            if (self.priority is not None):
+                req.priority = self.priority
+            if (self.robustness is not None):
+                req.robustness = self.robustness
+            req.reliability = self.reliability
+            req.route = self.route
             req.data = self._normalize_payload(data)
             destination = to if to is not None else self.remoteAddress
             proto = protocol if protocol is not None else self.remoteProtocol
