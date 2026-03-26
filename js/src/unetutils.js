@@ -6,6 +6,12 @@ const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq);
 const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
+let UnetTopics = {
+    'PARAMCHANGE' : 'org.arl.unet.Topics.PARAMCHANGE',  // Topic for parameter change notification.
+    'LIFECYCLE' : 'org.arl.unet.Topics.LIFECYCLE',      // Topic for agent lifecycle notification.
+    'DATAGRAM' : 'org.arl.unet.Topics.DATAGRAM',        // Topic for incoming datagram notification.
+};
+
 let UnetServices = {
   'NODE_INFO': 'org.arl.unet.Services.NODE_INFO',
   'ADDRESS_RESOLUTION': 'org.arl.unet.Services.ADDRESS_RESOLUTION',
@@ -239,4 +245,4 @@ function _initConv(lat){
  * @see {@link https://org-arl.github.io/fjage/jsdoc/|fjåge.js Documentation}
  */
 
-export {AgentID, Services, UnetMessages, Protocol};
+export {AgentID, Services, UnetMessages, UnetTopics, Protocol};

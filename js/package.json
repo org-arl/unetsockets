@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "9.39.4",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "browser-or-node": "^3.0.0",
@@ -50,7 +50,7 @@
     "globals": "^16.5.0",
     "jasmine": "^5.13.0",
     "node-static": "^0.7.11",
-    "puppeteer": "^24.40.0",
+    "playwright": "^1.58.2",
     "rollup": "^4.60.0"
   }
 }

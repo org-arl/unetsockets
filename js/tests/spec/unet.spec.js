@@ -1,4 +1,4 @@
-/* global it expect describe AgentID UnetMessages Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine*/
+/* global it expect describe AgentID UnetMessages UnetTopics Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine*/
 
 const DatagramNtf = UnetMessages.DatagramNtf;
 
@@ -25,9 +25,9 @@ if (isBrowser){
   }, ];
 }
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+// function delay(ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 describe('A UnetSocket', function () {
   it('should be able to be constructed', async function () {

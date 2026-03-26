@@ -1,13 +1,11 @@
 import {Gateway, Performative} from 'fjage';
-import {Services, UnetMessages, Protocol} from './unetutils';
+import {Services, UnetMessages, UnetTopics, Protocol} from './unetutils';
 
 const REQUEST_TIMEOUT = 1000;
 
 const AddressResolutionReq = UnetMessages.AddressResolutionReq;
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
-const RxFrameNtf = UnetMessages.RxFrameNtf;
-
 /**
  * Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
  * {@link Promise} instead of the constructed UnetSocket object. Use `await` or `.then()` to get
@@ -35,11 +33,28 @@ export default class UnetSocket {
       });
       this.localProtocol = -1;
       this.remoteAddress = -1;
+      this.localAddress = -1;
       this.remoteProtocol = Protocol.DATA;
       this.timeout = 0;
       this.provider = null;
+
+      //for new UnetStack versions (5.2.0 and later)
+      this.gw.subscribe(this.gw.topic(UnetTopics.DATAGRAM));
+
+      //for compatibility with older UnetStack versions (before 5.2.0)
       const alist = await this.gw.agentsForService(Services.DATAGRAM);
       alist.forEach(a => {this.gw.subscribe(this.gw.topic(a));});
+
+      // subscribe to paramchange for local address
+      this.gw.subscribe(this.gw.topic(UnetTopics.PARAMCHANGE));
+      this.gw.addMessageListener(msg => {
+        if (msg instanceof UnetMessages.ParamChangeNtf && msg.sender == 'node') {
+          if (msg.paramValues != null && Object.prototype.hasOwnProperty.call(msg.paramValues, 'address')) {
+            this.localAddress = msg.paramValues['address'];
+          }
+        }
+      });
+      this.localAddress = await this.getLocalAddress();
       return this;
     })();
   }
@@ -221,8 +236,9 @@ export default class UnetSocket {
   async receive() {
     if (this.gw == null) return null;
     return await this.gw.receive(msg => {
-      if (msg.__clazz__ != DatagramNtf.__clazz__ && msg.__clazz__ != RxFrameNtf.__clazz__ ) return false;
+      if (!(msg instanceof DatagramNtf)) return false;
       let p = msg.protocol;
+      if (msg.to != this.localAddress) return false;  // Datagram not addressed to this node
       if (p == Protocol.DATA || p >= Protocol.USER) {
         return this.localProtocol < 0 || this.localProtocol == p;
       }

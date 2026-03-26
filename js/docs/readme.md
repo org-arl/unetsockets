@@ -51,7 +51,7 @@
 
 ## UnetSocket
 
-[js/src/unetsocket.js:27-284][47]
+[js/src/unetsocket.js:25-300][47]
 
 Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
 [Promise][48] instead of the constructed UnetSocket object. Use `await` or `.then()` to get
@@ -74,7 +74,7 @@ Returns **[Promise][48]<[UnetSocket][1]>** Promise which resolves to the UnetSoc
 
 ### close
 
-[js/src/unetsocket.js:51-54][50]
+[js/src/unetsocket.js:66-69][50]
 
 Closes the socket. The socket functionality may not longer be accessed after this method is called.
 
@@ -82,7 +82,7 @@ Returns **void**&#x20;
 
 ### isClosed
 
-[js/src/unetsocket.js:60-62][51]
+[js/src/unetsocket.js:75-77][51]
 
 Checks if a socket is closed.
 
@@ -90,7 +90,7 @@ Returns **[boolean][52]** true if closed, false if open
 
 ### bind
 
-[js/src/unetsocket.js:71-77][53]
+[js/src/unetsocket.js:86-92][53]
 
 Binds a socket to listen to a specific protocol datagrams.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are reserved protocols
@@ -104,7 +104,7 @@ Returns **[boolean][52]** true on success, false on failure
 
 ### unbind
 
-[js/src/unetsocket.js:84-84][54]
+[js/src/unetsocket.js:99-99][54]
 
 Unbinds a socket so that it listens to all unreserved protocols.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved.
@@ -113,7 +113,7 @@ Returns **void**&#x20;
 
 ### isBound
 
-[js/src/unetsocket.js:90-90][55]
+[js/src/unetsocket.js:105-105][55]
 
 Checks if a socket is bound.
 
@@ -121,7 +121,7 @@ Returns **[boolean][52]** true if bound to a protocol, false if unbound
 
 ### connect
 
-[js/src/unetsocket.js:104-111][56]
+[js/src/unetsocket.js:119-126][56]
 
 Sets the default destination address and destination protocol number for datagrams sent
 using this socket. The defaults can be overridden for specific send() calls.
@@ -139,7 +139,7 @@ Returns **[boolean][52]** true on success, false on failure
 
 ### disconnect
 
-[js/src/unetsocket.js:118-121][58]
+[js/src/unetsocket.js:133-136][58]
 
 Resets the default destination address to undefined, and the default protocol number
 to Protocol.DATA.
@@ -148,7 +148,7 @@ Returns **void**&#x20;
 
 ### isConnected
 
-[js/src/unetsocket.js:127-127][59]
+[js/src/unetsocket.js:142-142][59]
 
 Checks if a socket is connected, i.e., has a default destination address and protocol number.
 
@@ -156,7 +156,7 @@ Returns **[boolean][52]** true if connected, false otherwise
 
 ### getLocalAddress
 
-[js/src/unetsocket.js:133-139][60]
+[js/src/unetsocket.js:148-154][60]
 
 Gets the local node address of the Unet node connected to.
 
@@ -164,7 +164,7 @@ Returns **[Promise][48]\<int>** local node address, or -1 on error
 
 ### getLocalProtocol
 
-[js/src/unetsocket.js:145-145][61]
+[js/src/unetsocket.js:160-160][61]
 
 Gets the protocol number that the socket is bound to.
 
@@ -172,7 +172,7 @@ Returns **[number][57]** } - protocol number if socket is bound, -1 otherwise
 
 ### getRemoteAddress
 
-[js/src/unetsocket.js:151-151][62]
+[js/src/unetsocket.js:166-166][62]
 
 Gets the default destination node address for a connected socket.
 
@@ -180,7 +180,7 @@ Returns **[number][57]** } - default destination node address if connected, -1 o
 
 ### getRemoteProtocol
 
-[js/src/unetsocket.js:157-157][63]
+[js/src/unetsocket.js:172-172][63]
 
 Gets the default transmission protocol number.
 
@@ -188,7 +188,7 @@ Returns **[number][57]** } - default protocol number used to transmit a datagram
 
 ### setTimeout
 
-[js/src/unetsocket.js:167-170][64]
+[js/src/unetsocket.js:182-185][64]
 
 Sets the timeout for datagram reception. A timeout of 0 means the
 [receive method][65] will check any appropriate
@@ -202,7 +202,7 @@ Returns **void**&#x20;
 
 ### getTimeout
 
-[js/src/unetsocket.js:176-176][66]
+[js/src/unetsocket.js:191-191][66]
 
 Gets the timeout for datagram reception.
 
@@ -210,7 +210,7 @@ Returns **[number][57]** timeout in milliseconds
 
 ### send
 
-[js/src/unetsocket.js:187-213][67]
+[js/src/unetsocket.js:202-228][67]
 
 Transmits a datagram to the specified node address using the specified protocol.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved,
@@ -226,7 +226,7 @@ Returns **[Promise][48]<[boolean][52]>** true if the Unet node agreed to send ou
 
 ### receive
 
-[js/src/unetsocket.js:221-231][69]
+[js/src/unetsocket.js:236-247][69]
 
 Receives a datagram sent to the local node and the bound protocol number. If the socket is unbound,
 then datagrams with all unreserved protocols are received. Any broadcast datagrams are also received.
@@ -235,7 +235,7 @@ Returns **[Promise][48]<[DatagramNtf][41]?>** datagram received by the socket
 
 ### getGateway
 
-[js/src/unetsocket.js:237-237][70]
+[js/src/unetsocket.js:253-253][70]
 
 Gets a Gateway to provide low-level access to UnetStack.
 
@@ -243,7 +243,7 @@ Returns **Gateway** underlying fjage Gateway supporting this socket
 
 ### agentForService
 
-[js/src/unetsocket.js:244-247][71]
+[js/src/unetsocket.js:260-263][71]
 
 Gets an AgentID providing a specified service for low-level access to UnetStack
 
@@ -255,7 +255,7 @@ Returns **[Promise][48]<[AgentID][43]?>** a promise which returns an [AgentID][4
 
 ### agentsForService
 
-[js/src/unetsocket.js:254-257][72]
+[js/src/unetsocket.js:270-273][72]
 
 #### Parameters
 
@@ -265,7 +265,7 @@ Returns **[Promise][48]<[Array][68]<[AgentID][43]>>** a promise which returns an
 
 ### agent
 
-[js/src/unetsocket.js:264-267][73]
+[js/src/unetsocket.js:280-283][73]
 
 Gets a named AgentID for low-level access to UnetStack.
 
@@ -277,7 +277,7 @@ Returns **[AgentID][43]** AgentID for the given name
 
 ### host
 
-[js/src/unetsocket.js:274-283][74]
+[js/src/unetsocket.js:290-299][74]
 
 Resolve node name to node address.
 
@@ -289,7 +289,7 @@ Returns **[Promise][48]<[number][57]?>** address of the node, or null if unable 
 
 ## Protocol
 
-[js/src/unetutils.js:34-46][75]
+[js/src/unetutils.js:40-52][75]
 
 Well-known protocol number assignments used in UnetStack
 
@@ -297,7 +297,7 @@ Type: [Object][76]<[string][49], [number][57]>
 
 ## UnetMessages
 
-[js/src/unetutils.js:52-155][77]
+[js/src/unetutils.js:58-161][77]
 
 Well-known protocol Messages used in UnetStack
 
@@ -305,7 +305,7 @@ Type: [Object][76]<[string][49], [MessageClass][46]>
 
 ## toGps
 
-[js/src/unetutils.js:165-171][78]
+[js/src/unetutils.js:171-177][78]
 
 Convert coordinates from a local coordinates to GPS coordinate
 
@@ -319,7 +319,7 @@ Returns **[Array][68]** GPS coordinates (in decimal degrees) as `[latitude, long
 
 ## toLocal
 
-[js/src/unetutils.js:180-186][79]
+[js/src/unetutils.js:186-192][79]
 
 Convert coordinates from a GPS coordinates to local coordinate
 
@@ -333,7 +333,7 @@ Returns **[Array][68]** GPS coordinates (in decimal degrees) as `[latitude, long
 
 ## DatagramReq
 
-[js/src/unetutils.js:242-242][80]
+[js/src/unetutils.js:248-248][80]
 
 A message which requests the transmission of the datagram from the Unet
 
@@ -350,7 +350,7 @@ Type: Message
 
 ## DatagramNtf
 
-[js/src/unetutils.js:242-242][81]
+[js/src/unetutils.js:248-248][81]
 
 Notification of received datagram message received by the Unet node.
 
@@ -366,7 +366,7 @@ Type: Message
 
 ## AgentID
 
-[js/src/unetutils.js:242-242][82]
+[js/src/unetutils.js:248-248][82]
 
 *   **See**: [fjåge.js Documentation][83]
 
@@ -374,7 +374,7 @@ An identifier for an agent or a topic.
 
 ## Services
 
-[js/src/unetutils.js:242-242][82]
+[js/src/unetutils.js:248-248][82]
 
 *   **See**: [fjåge.js Documentation][83]
 
@@ -382,7 +382,7 @@ Services supported by fjage agents.
 
 ## Performative
 
-[js/src/unetutils.js:242-242][82]
+[js/src/unetutils.js:248-248][82]
 
 *   **See**: [fjåge.js Documentation][83]
 
@@ -390,7 +390,7 @@ An action represented by a message.
 
 ## MessageClass
 
-[js/src/unetutils.js:242-242][82]
+[js/src/unetutils.js:248-248][82]
 
 *   **See**: [fjåge.js Documentation][83]
 
@@ -488,76 +488,76 @@ Function to creates a unqualified message class based on a fully qualified name.
 
 [46]: #messageclass
 
-[47]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L27-L284 "Source code on GitHub"
+[47]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L25-L300 "Source code on GitHub"
 
 [48]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
 
 [49]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[50]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L51-L54 "Source code on GitHub"
+[50]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L66-L69 "Source code on GitHub"
 
-[51]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L60-L62 "Source code on GitHub"
+[51]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L75-L77 "Source code on GitHub"
 
 [52]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[53]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L71-L77 "Source code on GitHub"
+[53]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L86-L92 "Source code on GitHub"
 
-[54]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L84-L84 "Source code on GitHub"
+[54]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L99-L99 "Source code on GitHub"
 
-[55]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L90-L90 "Source code on GitHub"
+[55]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L105-L105 "Source code on GitHub"
 
-[56]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L104-L111 "Source code on GitHub"
+[56]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L119-L126 "Source code on GitHub"
 
 [57]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[58]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L118-L121 "Source code on GitHub"
+[58]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L133-L136 "Source code on GitHub"
 
-[59]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L127-L127 "Source code on GitHub"
+[59]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L142-L142 "Source code on GitHub"
 
-[60]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L133-L139 "Source code on GitHub"
+[60]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L148-L154 "Source code on GitHub"
 
-[61]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L145-L145 "Source code on GitHub"
+[61]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L160-L160 "Source code on GitHub"
 
-[62]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L151-L151 "Source code on GitHub"
+[62]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L166-L166 "Source code on GitHub"
 
-[63]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L157-L157 "Source code on GitHub"
+[63]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L172-L172 "Source code on GitHub"
 
-[64]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L167-L170 "Source code on GitHub"
+[64]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L182-L185 "Source code on GitHub"
 
 [65]: #unetsocketreceive
 
-[66]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L176-L176 "Source code on GitHub"
+[66]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L191-L191 "Source code on GitHub"
 
-[67]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L187-L213 "Source code on GitHub"
+[67]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L202-L228 "Source code on GitHub"
 
 [68]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
 
-[69]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L221-L231 "Source code on GitHub"
+[69]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L236-L247 "Source code on GitHub"
 
-[70]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L237-L237 "Source code on GitHub"
+[70]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L253-L253 "Source code on GitHub"
 
-[71]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L244-L247 "Source code on GitHub"
+[71]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L260-L263 "Source code on GitHub"
 
-[72]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L254-L257 "Source code on GitHub"
+[72]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L270-L273 "Source code on GitHub"
 
-[73]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L264-L267 "Source code on GitHub"
+[73]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L280-L283 "Source code on GitHub"
 
-[74]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetsocket.js#L274-L283 "Source code on GitHub"
+[74]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetsocket.js#L290-L299 "Source code on GitHub"
 
-[75]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L30-L33 "Source code on GitHub"
+[75]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L36-L39 "Source code on GitHub"
 
 [76]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
 
-[77]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L48-L51 "Source code on GitHub"
+[77]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L54-L57 "Source code on GitHub"
 
-[78]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L165-L171 "Source code on GitHub"
+[78]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L171-L177 "Source code on GitHub"
 
-[79]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L180-L186 "Source code on GitHub"
+[79]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L186-L192 "Source code on GitHub"
 
-[80]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L195-L205 "Source code on GitHub"
+[80]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L201-L211 "Source code on GitHub"
 
-[81]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L207-L216 "Source code on GitHub"
+[81]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L213-L222 "Source code on GitHub"
 
-[82]: https://github.com/org-arl/unetsockets/blob/058ff1e2dd86f6fa324221369ed91c4f108b115f/js/src/unetutils.js#L242-L242 "Source code on GitHub"
+[82]: https://github.com/org-arl/unetsockets/blob/b807e4dbc9273c91498335f233accac4d634dafc/js/src/unetutils.js#L248-L248 "Source code on GitHub"
 
 [83]: https://org-arl.github.io/fjage/jsdoc/

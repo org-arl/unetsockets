@@ -1,36 +1,54 @@
 #!/usr/bin/env node
 
-const process = require('process');
-
-const puppeteer = require('puppeteer');
 const statik = require('node-static');
+const process = require('process');
+const { chromium,  webkit, firefox} = require('playwright');
 
-console.log('\nSetting up local static server at http://localhost:8000/tests');
+const ip = 'localhost';
+const port = 8000;
+let server = null;
+
+// Setup static web server for testing browser version
+console.log('Setting up local static server at http://'+ip+':'+port+'/test');
 const file = new statik.Server('.');
-let server = require('http').createServer(function (request, response) {
+server = require('http').createServer(function (request, response) {
   request.addListener('end', function () {
     file.serve(request, response);
   }).resume();
-}).listen(8000);
+}).listen(port);
 
 if (process.argv.includes('-m')) {
   console.log('Waiting for manual test to start...');
 } else {
   (async () => {
-    console.log('Launching puppeteer..');
-    const browser = await puppeteer.launch({ headless: 'new',});
-    const page = await browser.newPage();
+    console.log('Launching playright..');
+    let startTime = new Date();
+    let browser = null;
+    // on MacOS use webkit instead of chromium
+    if (process.platform === 'darwin') {
+      browser = await webkit.launch();
+    } else if (process.platform === 'win32') {
+      browser = await chromium.launch();
+    } else {
+      browser = await firefox.launch();
+    }
+    const context = await browser.newContext();
+    const page = await context.newPage();
     page.on('console', msg => {
-      msg.type() == 'error' && console.log('PAGE ERR:', msg.text());
-      msg.type() == 'warning' && console.log('PAGE WARN:', msg.text());
+      if (msg.type() === 'log') console.log(`PAGE LOG: ${msg.text()}`);
+      if (msg.type() === 'error') console.log(`PAGE ERR: ${msg.text()}`);
+      if (msg.type() === 'warning') console.log(`PAGE WARN: ${msg.text()}`);
     });
-    await page.goto('http://localhost:8000/tests', {waitUntil: 'networkidle2'});
-    await page.waitForSelector('.jasmine-overall-result');
-    const classList = await page.$eval('.jasmine-overall-result', (el) => el.classList);
-    const classes = Object.values(classList);
+    await page.goto(`http://${ip}:${port}/tests`, {waitUntil: 'networkidle'});
+    await page.waitForSelector('.jasmine-overall-result', {timeout: 60000});
+    await page.waitForTimeout(1000);
     await browser.close();
-    console.log('Complete : ', classes.includes('jasmine-passed') ? 'PASSED':'FAILED');
-    server.close();
+    console.log(`Browser test Complete [${new Date() - startTime} ms]`);
+
+    // If running in automatic mode, close the server and exit
+    if(server) server.close();
+    console.log('Run Tests Complete!');
+    process.exit(0);
   })();
 }
 

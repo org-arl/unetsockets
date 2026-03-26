@@ -1,4 +1,4 @@
-/* unet.js v5.1.0 2026-03-26T10:41:14.204Z */
+/* unet.js v5.1.0 2026-03-26T10:42:10.653Z */
 
 'use strict';
 
@@ -1912,8 +1912,14 @@ init();
 const DatagramReq$1 = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf$1 = MessageClass('org.arl.unet.DatagramNtf');
 const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq$1);
-const RxFrameNtf$1 = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf$1);
+const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf$1);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
+
+let UnetTopics = {
+    'PARAMCHANGE' : 'org.arl.unet.Topics.PARAMCHANGE',  // Topic for parameter change notification.
+    'LIFECYCLE' : 'org.arl.unet.Topics.LIFECYCLE',      // Topic for agent lifecycle notification.
+    'DATAGRAM' : 'org.arl.unet.Topics.DATAGRAM',        // Topic for incoming datagram notification.
+};
 
 let UnetServices = {
   'NODE_INFO': 'org.arl.unet.Services.NODE_INFO',
@@ -1991,9 +1997,9 @@ let UnetMessages = {
 
   // phy
   'FecDecodeReq'           : MessageClass('org.arl.unet.phy.FecDecodeReq'),
-  'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf$1),
+  'RxSWiG1FrameNtf'        : MessageClass('org.arl.unet.phy.RxSWiG1FrameNtf', RxFrameNtf),
   'TxSWiG1FrameReq'        : MessageClass('org.arl.unet.phy.TxSWiG1FrameReq', TxFrameReq),
-  'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf$1),
+  'RxJanusFrameNtf'        : MessageClass('org.arl.unet.phy.RxJanusFrameNtf', RxFrameNtf),
   'TxJanusFrameReq'        : MessageClass('org.arl.unet.phy.TxJanusFrameReq', TxFrameReq),
   'BadFrameNtf'            : MessageClass('org.arl.unet.phy.BadFrameNtf'),
   'BadRangeNtf'            : MessageClass('org.arl.unet.phy.BadRangeNtf'),
@@ -2106,8 +2112,6 @@ const REQUEST_TIMEOUT = 1000;
 const AddressResolutionReq = UnetMessages.AddressResolutionReq;
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
-const RxFrameNtf = UnetMessages.RxFrameNtf;
-
 /**
  * Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
  * {@link Promise} instead of the constructed UnetSocket object. Use `await` or `.then()` to get
@@ -2135,11 +2139,28 @@ class UnetSocket {
       });
       this.localProtocol = -1;
       this.remoteAddress = -1;
+      this.localAddress = -1;
       this.remoteProtocol = Protocol.DATA;
       this.timeout = 0;
       this.provider = null;
+
+      //for new UnetStack versions (5.2.0 and later)
+      this.gw.subscribe(this.gw.topic(UnetTopics.DATAGRAM));
+
+      //for compatibility with older UnetStack versions (before 5.2.0)
       const alist = await this.gw.agentsForService(Services.DATAGRAM);
       alist.forEach(a => {this.gw.subscribe(this.gw.topic(a));});
+
+      // subscribe to paramchange for local address
+      this.gw.subscribe(this.gw.topic(UnetTopics.PARAMCHANGE));
+      this.gw.addMessageListener(msg => {
+        if (msg instanceof UnetMessages.ParamChangeNtf && msg.sender == 'node') {
+          if (msg.paramValues != null && Object.prototype.hasOwnProperty.call(msg.paramValues, 'address')) {
+            this.localAddress = msg.paramValues['address'];
+          }
+        }
+      });
+      this.localAddress = await this.getLocalAddress();
       return this;
     })();
   }
@@ -2321,8 +2342,9 @@ class UnetSocket {
   async receive() {
     if (this.gw == null) return null;
     return await this.gw.receive(msg => {
-      if (msg.__clazz__ != DatagramNtf.__clazz__ && msg.__clazz__ != RxFrameNtf.__clazz__ ) return false;
+      if (!(msg instanceof DatagramNtf)) return false;
       let p = msg.protocol;
+      if (msg.to != this.localAddress) return false;  // Datagram not addressed to this node
       if (p == Protocol.DATA || p >= Protocol.USER) {
         return this.localProtocol < 0 || this.localProtocol == p;
       }
@@ -2392,5 +2414,6 @@ exports.Protocol = Protocol;
 exports.Services = Services;
 exports.UnetMessages = UnetMessages;
 exports.UnetSocket = UnetSocket;
+exports.UnetTopics = UnetTopics;
 exports.toGps = toGps;
 exports.toLocal = toLocal;
