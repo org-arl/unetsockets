@@ -2,8 +2,9 @@
 
 TEST_SCRIPT=2-node-des.groovy
 
-pattern="tests/unet/unet-*"
-files=($pattern)
+shopt -s nullglob
+files=(tests/unet/unet-*)
+shopt -u nullglob
 DIR=${files[0]}
 
 # If JAVA_HOME env variable is not set, throw an error
@@ -18,9 +19,9 @@ fi
 
 if [ "$1" == "stop" ]; then
   # First, try to gracefully terminate the processes
-  for pid in $(pgrep -f "java.*unet"); do kill -15 $pid > /dev/null 2>&1; done
+  for pid in $(pgrep -f "java.*unet"); do kill -15 "$pid" > /dev/null 2>&1; done
   # Wait for processes to exit
   sleep 5
   # Force kill any remaining processes
-  for pid in $(pgrep -f "java.*unet"); do kill -9 $pid > /dev/null 2>&1; done
+  for pid in $(pgrep -f "java.*unet"); do kill -9 "$pid" > /dev/null 2>&1; done
 fi
