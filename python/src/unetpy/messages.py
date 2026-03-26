@@ -31,7 +31,6 @@ FailureNtf = MessageClass("org.arl.unet.FailureNtf")
 
 #remote
 
-RemoteSuccessNtf = MessageClass("org.arl.unet.remote.RemoteSuccessNtf")
 
 
 
