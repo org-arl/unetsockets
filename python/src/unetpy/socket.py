@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from math import isnan
+from threading import Thread
 from typing import Iterable, Optional, Sequence, Union, Callable
 
 from fjagepy import AgentID, Gateway, Message, Performative
@@ -17,6 +18,7 @@ from .messages import (
     RemoteFailureNtf,
     RemoteMessageReq,
     RemoteSuccessNtf,
+    ParamChangeNtf,
 )
 
 __all__ = ["UnetSocket"]
@@ -97,11 +99,33 @@ class UnetSocket:
         self.mailbox : Optional[str] = None;
         self._subscribe_datagrams()
 
+        # subscribe to paramchange for local address
+        self.gw.subscribe(self.gw.topic(Topics.PARAMCHANGE))
+        # create a background thread which does a BLOCKING receive to update the local address when it changes
+        self._param_checker_thread = Thread(target=self._update_local_address, daemon=True)
+        self._param_checker_thread.start()
+        self.localAddress = self.getLocalAddress();
+
     def __enter__(self) -> "UnetSocket":
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
         self.close()
+
+
+    def _update_local_address(self) -> None:
+        while getattr(self, "_param_checker_thread_running", True):
+            try:
+                # check if the ParamChangeNtf has a dict called paramValues with a key "address" and if so update the local address
+                ntf = self.gw.receive(lambda msg: isinstance(msg, ParamChangeNtf) and msg.sender == AgentID("node") and hasattr(msg, "paramValues") and isinstance(msg.paramValues, dict) and "address" in msg.paramValues, timeout=1000)
+                if ntf is not None and hasattr(ntf, "paramValues") and isinstance(ntf.paramValues, dict) and "address" in ntf.paramValues:
+                    new_address = ntf.paramValues["address"]
+                    if isinstance(new_address, int):
+                        logger.info(f"Local address updated to {new_address}")
+                        self.localAddress = new_address
+            except Exception as e:
+                logger.error("Error in local address update thread", exc_info=True)
+                break
 
     def _subscribe_datagrams(self) -> None:
         if self.gw is None:
@@ -127,7 +151,9 @@ class UnetSocket:
             >>> sock.isClosed()
             True
         """
-
+        if self._param_checker_thread is not None and self._param_checker_thread.is_alive():
+            self._param_checker_thread_running = False
+            self._param_checker_thread.join(timeout=1)
         if self.gw is None:
             return
         self.gw.close()
@@ -664,8 +690,7 @@ class UnetSocket:
         effective_timeout = self._effective_timeout(timeout)
         logger.debug(f"Trying to receive datagram for up to {effective_timeout} ms")
         try:
-            localAddress = self.getLocalAddress()
-            return self.gw.receive(_createMatcher(localAddress, self.localProtocol), effective_timeout)
+            return self.gw.receive(_createMatcher(self.localAddress, self.localProtocol), effective_timeout)
         except Exception as e:
             logger.error(f"Failed to receive datagram", exc_info=True)
 
