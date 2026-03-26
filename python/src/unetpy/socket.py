@@ -337,8 +337,13 @@ class UnetSocket:
         Args:
             mode: Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
         """
-        if mode < Gateway.SEMI_BLOCKING or mode > Gateway.BLOCKING:
-            logger.error(f"Invalid send mode {mode}. Must be between {Gateway.SEMI_BLOCKING} and {Gateway.BLOCKING}.")
+        if mode not in (Gateway.SEMI_BLOCKING, Gateway.NON_BLOCKING, Gateway.BLOCKING):
+            logger.error(
+                f"Invalid send mode {mode}. Must be one of "
+                f"{Gateway.SEMI_BLOCKING} (SEMI_BLOCKING), "
+                f"{Gateway.NON_BLOCKING} (NON_BLOCKING), "
+                f"{Gateway.BLOCKING} (BLOCKING)."
+            )
             return
         self.sendMode = mode
 
