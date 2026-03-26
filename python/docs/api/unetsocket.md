@@ -329,6 +329,21 @@ Get the protocol number that the socket is bound to.
 
 ---
 
+### getMailbox()
+
+```python
+getMailbox() -> 'Optional[str]'
+```
+
+Get the mailbox for outgoing remote messages.
+
+
+**Returns:**
+
+    Mailbox name, or None if not set.
+
+---
+
 ### getMessageClass()
 
 ```python
@@ -475,7 +490,32 @@ Get the send mode for datagram transmission.
 
 **Returns:**
 
-    Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
+    Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.  NON_BLOCKING sends the request without waiting for an AGREE. SEMI_BLOCKING waits for an AGREE, and if reliability is True also waits for a remote delivery/failure notification. BLOCKING waits for an AGREE followed by a completion notification.
+
+---
+
+### getServiceProvider()
+
+```python
+getServiceProvider() -> 'Optional[AgentID]'
+```
+
+Get the explicitly selected datagram service provider.
+
+
+**Returns:**
+
+    Selected service provider, or None if not set.  If no provider is set, UnetSocket selects one automatically when sending. RemoteMessageReq traffic prefers Services.REMOTE when available. Plain datagrams use the normal transport/routing/link/physical/datagram stack.
+
+---
+
+### getTTL()
+
+```python
+getTTL() -> 'float'
+```
+
+Alias for getTtl().
 
 ---
 
@@ -631,7 +671,19 @@ send(data: 'Union[bytes, bytearray, Sequence[int], Message, str]', to: 'Optional
 Transmit a datagram to the specified destination.
 
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are reserved
-and cannot be used for sending.
+and cannot be used for sending. Socket-level metadata such as MIME type,
+message class, remote recipient, and mailbox automatically promote the
+outgoing request to a RemoteMessageReq.
+
+If no service provider is set explicitly, plain datagrams are routed using
+the normal UnetStack stack in order of preference: TRANSPORT, ROUTING,
+LINK, PHYSICAL, DATAGRAM. RemoteMessageReq traffic prefers REMOTE when
+available.
+
+Send behavior depends on sendMode. NON_BLOCKING returns after handing the
+request to the gateway. SEMI_BLOCKING waits for AGREE, and if reliability
+is True also waits for a remote delivery/failure notification. BLOCKING
+waits for AGREE and then for a transmission or delivery/failure notification.
 
 
 **Parameters:**
@@ -656,6 +708,23 @@ and cannot be used for sending.
     >>> sock.send("Hello", to=31, protocol=Protocol.USER)
     True
 ```
+
+---
+
+### setMailbox()
+
+```python
+setMailbox(mailbox: 'Optional[str]') -> 'None'
+```
+
+Set the mailbox for outgoing remote messages.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `mailbox` | Mailbox name, or None to unset. |
 
 ---
 
@@ -798,10 +867,11 @@ setSendMode(mode: 'int') -> 'None'
 
 Set the send mode for datagram transmission. NON_BLOCKING mode makes a
 request to send data, but does not wait for acceptance or transmission.
-BLOCKING mode waits until the data is transmitted. If the socket is reliable,
-waits until delivery is acknowledged or fails. SEMI_BLOCKING mode waits until
-the data is accepted for transmission, but does not wait for actual transmission
-for unreliable sockets.
+SEMI_BLOCKING mode waits until the data is accepted for transmission, but
+does not wait for actual transmission for unreliable sockets. If reliability
+is True, SEMI_BLOCKING waits for a remote delivery/failure notification.
+BLOCKING mode waits for request acceptance followed by a transmission or
+delivery/failure notification.
 
 
 **Parameters:**
@@ -809,6 +879,33 @@ for unreliable sockets.
 | Parameter | Description |
 |-----------|-------------|
 | `mode` | Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking. |
+
+---
+
+### setServiceProvider()
+
+```python
+setServiceProvider(provider: 'Optional[AgentID]') -> 'None'
+```
+
+Set the datagram service provider to use for future sends.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `provider` | Provider agent, or None to restore automatic selection. |
+
+---
+
+### setTTL()
+
+```python
+setTTL(ttl: 'float') -> 'None'
+```
+
+Alias for setTtl().
 
 ---
 

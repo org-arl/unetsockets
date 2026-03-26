@@ -60,6 +60,27 @@ with UnetSocket("localhost", 1100) as sock:
     sock.send([1, 2, 3])
     sock.send([4, 5, 6])
     sock.send([7, 8, 9])
+
+### Using Socket-Level Metadata
+
+```python
+from unetpy import Gateway, Protocol, UnetSocket
+
+with UnetSocket("localhost", 1100) as sock:
+    sock.connect(31, Protocol.USER)
+    sock.setTTL(4)
+    sock.setMailbox("STATUS")
+    sock.setMimeType("application/json+auvstatus")
+    sock.setRemoteRecipient("TOPSIDE")
+    sock.setSendMode(Gateway.SEMI_BLOCKING)
+
+    # MIME type / mailbox / remote recipient promote the request to RemoteMessageReq.
+    sock.send('{"battery": 87}')
+```
+
+If you do not call `setServiceProvider()`, plain datagrams are sent through the
+normal transport/routing/link/physical/datagram stack. Remote-message traffic
+prefers the `REMOTE` service when it is available.
 ```
 
 ## Receiving Data

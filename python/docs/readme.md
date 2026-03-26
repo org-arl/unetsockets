@@ -18,6 +18,8 @@
 ## Features
 
 - **High-level `UnetSocket` API** - Simple socket-like interface for sending and receiving datagrams
+- **Socket-level send metadata** - Configure TTL, priority, reliability, route, MIME type, mailbox, and remote recipients once and reuse them across sends
+- **Provider and send-mode control** - Override the service provider when needed and choose non-blocking, semi-blocking, or blocking send behavior
 - **Full fjåge compatibility** - All fjåge primitives are re-exported for low-level access
 - **Pre-defined message classes** - All UnetStack messages available as direct imports (`DatagramReq`, `DatagramNtf`, etc.)
 - **Coordinate utilities** - Convert between GPS and local coordinates
