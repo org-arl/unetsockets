@@ -60,6 +60,7 @@ with UnetSocket("localhost", 1100) as sock:
     sock.send([1, 2, 3])
     sock.send([4, 5, 6])
     sock.send([7, 8, 9])
+```
 
 ### Using Socket-Level Metadata
 
@@ -81,7 +82,6 @@ with UnetSocket("localhost", 1100) as sock:
 If you do not call `setServiceProvider()`, plain datagrams are sent through the
 normal transport/routing/link/physical/datagram stack. Remote-message traffic
 prefers the `REMOTE` service when it is available.
-```
 
 ## Receiving Data
 
