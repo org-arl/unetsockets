@@ -15,7 +15,7 @@ pip install unetpy
 Clone the repository and install it in editable mode:
 
 ```bash
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 This uses the `pyproject.toml`-based build powered by the standard [setuptools](https://setuptools.pypa.io/) backend.
