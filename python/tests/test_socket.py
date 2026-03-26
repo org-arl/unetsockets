@@ -174,6 +174,24 @@ def _drain_pending_messages(sock, timeout_ms=100):
         pass
 
 
+def _receive_datagram(sock, attempts=3, delay_s=0.5):
+    """Receive the next datagram, retrying briefly for simulator propagation."""
+    ntf = None
+    for _ in range(attempts):
+        ntf = sock.receive()
+        if isinstance(ntf, DatagramNtf):
+            return ntf
+        time.sleep(delay_s)
+    return ntf
+
+
+def _assert_received_payload(sock, payload):
+    """Assert that the socket receives a datagram with the expected payload."""
+    ntf = _receive_datagram(sock)
+    assert isinstance(ntf, DatagramNtf)
+    assert ntf.data == payload
+
+
 class TestUnetSocketTimeout:
     """Tests for timeout functionality."""
 
@@ -369,107 +387,141 @@ class TestUnetSocketCommunication:
     """Tests for datagram communication between nodes."""
 
     def test_communication_requires_binding(self):
-        """UnetSocket should be only able to communicate bound to protocol."""
+        """Explicit destination/protocol is required when the sender is unconnected."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                # Drain any stale messages from previous tests
                 _drain_pending_messages(sock2)
                 sock2.setTimeout(2000)
 
-                # Send without remote address should fail
                 assert not sock1.send([11, 12, 13])
-
-                # Send to address without binding to same protocol - should send but receiver won't get it
                 assert sock1.send([14, 15, 16], NODE_B_ADDRESS)
                 assert sock2.receive() is None
-
-                # Send with correct protocol - should work
                 assert sock1.send([17, 18, 19], NODE_B_ADDRESS, Protocol.USER)
-                # Wait a bit for propagation in simulator
-                time.sleep(0.5)
-                ntf = sock2.receive()
-                assert isinstance(ntf, DatagramNtf)
-                assert ntf.data == [17, 18, 19]
+                _assert_received_payload(sock2, [17, 18, 19])
 
     def test_communication_on_connected_protocol(self):
-        """UnetSocket should be only able to communicate on the protocol connected to."""
+        """A connection supplies default destination and protocol for sends."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                # Drain any stale messages from previous tests
                 _drain_pending_messages(sock2)
                 sock2.setTimeout(5000)
 
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
 
-                # Connected send should work
                 assert sock1.send([21, 22, 23])
-                time.sleep(0.5)
-                ntf = sock2.receive()
-                assert isinstance(ntf, DatagramNtf)
-                assert ntf.data == [21, 22, 23]
+                _assert_received_payload(sock2, [21, 22, 23])
 
-                # Send with different protocol should not be received
                 assert sock1.send([24, 25, 26], NODE_B_ADDRESS, 0)
                 assert sock2.receive() is None
 
-                # Send to different address should not be received
                 assert sock1.send([27, 28, 29], 27, Protocol.USER)
-                ntf = sock2.receive()
-                assert ntf == None
+                assert sock2.receive() is None
 
-                # Connected send with data should work
                 assert sock1.send([30, 31, 32])
-                time.sleep(0.5)
-                ntf = sock2.receive()
-                assert isinstance(ntf, DatagramNtf)
-                assert ntf.data == [30, 31, 32]
+                _assert_received_payload(sock2, [30, 31, 32])
 
-    def test_communication_after_disconnect(self):
-        """UnetSocket should not send after disconnect without explicit address."""
+    def test_send_resolution_uses_connected_defaults_when_only_one_argument_is_overridden(self):
+        """Connected sockets should resolve missing send arguments from the connection."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                # Drain any stale messages from previous tests
+                _drain_pending_messages(sock2)
+                sock2.setTimeout(2000)
+
+                sock1.connect(NODE_B_ADDRESS, Protocol.USER)
+
+                assert sock1.send([33, 34, 35], NODE_B_ADDRESS)
+                _assert_received_payload(sock2, [33, 34, 35])
+
+                assert sock1.send([36, 37, 38], protocol=Protocol.USER)
+                _assert_received_payload(sock2, [36, 37, 38])
+
+    def test_send_resolution_rejects_or_misdirects_other_connected_combinations(self):
+        """Connected sockets should still honor explicit overrides for destination and protocol."""
+        with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
+            with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
+                assert sock2.bind(Protocol.USER)
+                _drain_pending_messages(sock2)
+                sock2.setTimeout(2000)
+
+                sock1.connect(NODE_B_ADDRESS, Protocol.USER)
+
+                assert sock1.send([39, 40, 41], protocol=Protocol.DATA)
+                assert sock2.receive() is None
+
+                assert sock1.send([42, 43, 44], to=27)
+                assert sock2.receive() is None
+
+    def test_communication_after_disconnect(self):
+        """Disconnect removes the implicit send destination and protocol."""
+        with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
+            with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
+                assert sock2.bind(Protocol.USER)
                 _drain_pending_messages(sock2)
                 sock2.setTimeout(2000)
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
 
                 sock1.disconnect()
-                # Send without address should fail after disconnect
                 assert not sock1.send([41, 42, 43])
-
-                # Send with explicit address should work
                 assert sock1.send([44, 45, 46], NODE_B_ADDRESS, Protocol.USER)
-                time.sleep(0.5)
-                ntf = sock2.receive()
-                assert isinstance(ntf, DatagramNtf)
-                assert ntf.data == [44, 45, 46]
+                _assert_received_payload(sock2, [44, 45, 46])
+
+    def test_request_building_resolves_to_and_protocol_combinations(self):
+        """Datagram request construction should follow the same send resolution matrix."""
+        with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
+            req = sock._build_datagram_request([51], None, None)
+            assert req is None
+
+            req = sock._build_datagram_request([52], NODE_B_ADDRESS, None)
+            assert isinstance(req, DatagramReq)
+            assert req.to == NODE_B_ADDRESS
+            assert req.protocol == Protocol.DATA
+
+            req = sock._build_datagram_request([53], NODE_B_ADDRESS, Protocol.USER)
+            assert isinstance(req, DatagramReq)
+            assert req.to == NODE_B_ADDRESS
+            assert req.protocol == Protocol.USER
+
+            sock.connect(NODE_B_ADDRESS, Protocol.USER)
+
+            req = sock._build_datagram_request([54], None, None)
+            assert isinstance(req, DatagramReq)
+            assert req.to == NODE_B_ADDRESS
+            assert req.protocol == Protocol.USER
+
+            req = sock._build_datagram_request([55], NODE_B_ADDRESS, None)
+            assert isinstance(req, DatagramReq)
+            assert req.to == NODE_B_ADDRESS
+            assert req.protocol == Protocol.USER
+
+            req = sock._build_datagram_request([56], None, Protocol.DATA)
+            assert isinstance(req, DatagramReq)
+            assert req.to == NODE_B_ADDRESS
+            assert req.protocol == Protocol.DATA
+
+            req = sock._build_datagram_request([57], 27, None)
+            assert isinstance(req, DatagramReq)
+            assert req.to == 27
+            assert req.protocol == Protocol.USER
+
+            req = sock._build_datagram_request([58], 27, Protocol.DATA)
+            assert isinstance(req, DatagramReq)
+            assert req.to == 27
+            assert req.protocol == Protocol.DATA
 
     def test_datagram_between_two_nodes(self):
         """Datagrams should flow between two simulator nodes on 1101 and 1102."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
-                # Bind receiver to a user protocol and discover its address.
                 assert sock2.bind(Protocol.USER)
-                # Drain any stale messages from previous tests
                 _drain_pending_messages(sock2)
                 addr2 = sock2.getLocalAddress()
                 assert addr2 >= 0
                 sock2.setTimeout(2000)
 
-                # Send from node1 -> node2.
                 payload = [51, 52, 53]
                 assert sock1.send(payload, addr2, Protocol.USER)
-                time.sleep(0.5)
-
-                ntf = None
-                for _ in range(3):
-                    ntf = sock2.receive()
-                    if isinstance(ntf, DatagramNtf):
-                        break
-                    time.sleep(0.5)
-                assert isinstance(ntf, DatagramNtf)
-                assert ntf.data == payload
+                _assert_received_payload(sock2, payload)
 
