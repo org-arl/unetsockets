@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 import logging
+from math import isnan
 from typing import Iterable, Optional, Sequence, Union, Callable
 
 from fjagepy import AgentID, Gateway, Message, Performative
 from .constants import Protocol, Services, Topics, Address, Priority, Robustness
-from .messages import AddressResolutionReq, DatagramNtf, DatagramReq, RemoteMessageReq
+from .messages import (
+    AddressResolutionReq,
+    DatagramDeliveryNtf,
+    DatagramFailureNtf,
+    DatagramNtf,
+    DatagramReq,
+    RemoteFailureNtf,
+    RemoteMessageReq,
+    RemoteSuccessNtf,
+)
 
 __all__ = ["UnetSocket"]
 
@@ -307,20 +317,29 @@ class UnetSocket:
 
         Returns:
             Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
+
+        NON_BLOCKING sends the request without waiting for an AGREE.
+        SEMI_BLOCKING waits for an AGREE, and if reliability is True also waits
+        for a remote delivery/failure notification. BLOCKING waits for an AGREE
+        followed by a completion notification.
         """
         return self.sendMode
 
     def setSendMode(self, mode: int) -> None:
         """Set the send mode for datagram transmission. NON_BLOCKING mode makes a
         request to send data, but does not wait for acceptance or transmission.
-        BLOCKING mode waits until the data is transmitted. If the socket is reliable,
-        waits until delivery is acknowledged or fails. SEMI_BLOCKING mode waits until
-        the data is accepted for transmission, but does not wait for actual transmission
-        for unreliable sockets.
+        SEMI_BLOCKING mode waits until the data is accepted for transmission, but
+        does not wait for actual transmission for unreliable sockets. If reliability
+        is True, SEMI_BLOCKING waits for a remote delivery/failure notification.
+        BLOCKING mode waits for request acceptance followed by a transmission or
+        delivery/failure notification.
 
         Args:
             mode: Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
         """
+        if mode < Gateway.SEMI_BLOCKING or mode > Gateway.BLOCKING:
+            logger.error(f"Invalid send mode {mode}. Must be between {Gateway.SEMI_BLOCKING} and {Gateway.BLOCKING}.")
+            return
         self.sendMode = mode
 
     def getTtl(self) -> float:
@@ -331,6 +350,10 @@ class UnetSocket:
         """
         return self.ttl
 
+    def getTTL(self) -> float:
+        """Alias for getTtl()."""
+        return self.getTtl()
+
     def setTtl(self, ttl: float) -> None:
         """Set the Time-To-Live (TTL) for outgoing datagrams.
 
@@ -338,6 +361,10 @@ class UnetSocket:
             ttl: TTL value. Use NaN to unset.
         """
         self.ttl = ttl
+
+    def setTTL(self, ttl: float) -> None:
+        """Alias for setTtl()."""
+        self.setTtl(ttl)
 
     def getPriority(self) -> int:
         """Get the priority level for outgoing datagrams.
@@ -377,8 +404,11 @@ class UnetSocket:
         Example:
             >>> sock.setRobustness(Robustness.ROBUST)
         """
-        if robustness < Robustness.ROBUST or robustness > Robustness.ROBUST:
-            logger.error(f"Invalid robustness level {robustness}. Must be between {Robustness.ROBUST} and {Robustness.ROBUST}.")
+        if robustness < Robustness.ROBUST or robustness > Robustness.NORMAL:
+            logger.error(
+                f"Invalid robustness level {robustness}. Must be between "
+                f"{Robustness.ROBUST} and {Robustness.NORMAL}."
+            )
             return
         self.robustness = robustness
 
@@ -462,6 +492,47 @@ class UnetSocket:
         """
         self.remoteRecipient = remoteRecipient
 
+    def getMailbox(self) -> Optional[str]:
+        """Get the mailbox for outgoing remote messages.
+
+        Returns:
+            Mailbox name, or None if not set.
+        """
+        return self.mailbox
+
+    def setMailbox(self, mailbox: Optional[str]) -> None:
+        """Set the mailbox for outgoing remote messages.
+
+        Args:
+            mailbox: Mailbox name, or None to unset.
+        """
+        self.mailbox = mailbox
+
+    def getServiceProvider(self) -> Optional[AgentID]:
+        """Get the explicitly selected datagram service provider.
+
+        Returns:
+            Selected service provider, or None if not set.
+
+        If no provider is set, UnetSocket selects one automatically when sending.
+        RemoteMessageReq traffic prefers Services.REMOTE when available. Plain
+        datagrams use the normal transport/routing/link/physical/datagram stack.
+        """
+        return self.provider
+
+    def setServiceProvider(self, provider: Optional[AgentID]) -> None:
+        """Set the datagram service provider to use for future sends.
+
+        Args:
+            provider: Provider agent, or None to restore automatic selection.
+
+        When provider is None, UnetSocket reverts to automatic provider selection.
+        Automatic selection prefers Services.REMOTE for RemoteMessageReq traffic,
+        and otherwise walks down Services.TRANSPORT, Services.ROUTING,
+        Services.LINK, Services.PHYSICAL, and Services.DATAGRAM.
+        """
+        self.provider = provider
+
 
     def send(
         self,
@@ -472,11 +543,25 @@ class UnetSocket:
         """Transmit a datagram to the specified destination.
 
         Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are reserved
-        and cannot be used for sending.
+        and cannot be used for sending. Socket-level metadata such as MIME type,
+        message class, remote recipient, and mailbox automatically promote the
+        outgoing request to a RemoteMessageReq.
+
+        If no service provider is set explicitly, plain datagrams are routed using
+        the normal UnetStack stack in order of preference: TRANSPORT, ROUTING,
+        LINK, PHYSICAL, DATAGRAM. RemoteMessageReq traffic prefers REMOTE when
+        available.
+
+        Send behavior depends on sendMode. NON_BLOCKING returns after handing the
+        request to the gateway. SEMI_BLOCKING waits for AGREE, and if reliability
+        is True also waits for a remote delivery/failure notification. BLOCKING
+        waits for AGREE and then for a transmission or delivery/failure notification.
 
         Args:
             data: Data to transmit. Can be bytes, bytearray, list of integers,
-                a string (encoded as UTF-8), or a DatagramReq message.
+                a string (encoded as UTF-8), or a DatagramReq message. Passing a
+                pre-built DatagramReq is supported for compatibility, but using the
+                socket-level configuration API is preferred.
             to: Destination node address. Uses default if not specified.
             protocol: Protocol number. Uses default if not specified.
 
@@ -493,9 +578,11 @@ class UnetSocket:
         """
 
         if self.gw is None:
+            logger.error("Cannot send datagram: socket is closed.")
             return False
 
         req = self._build_datagram_request(data, to, protocol)
+        logger.debug(f"Built datagram request: {req}")
         if req is None:
             return False
 
@@ -507,10 +594,28 @@ class UnetSocket:
             logger.debug(f"Using {provider} as datagram service provider.")
             req.recipient = provider
 
-        rsp = self.gw.request(req, self.REQUEST_TIMEOUT)
-        return rsp is not None and rsp.perf == Performative.AGREE
+        if self.sendMode == Gateway.NON_BLOCKING:
+            try:
+                self.gw.send(req)
+            except Exception:
+                logger.error("Failed to send datagram", exc_info=True)
+                return False
+            return True
 
-    def receive(self, timeout: Optional[int] = None) -> Optional[DatagramNtf]:
+        rsp = self.gw.request(req, self.REQUEST_TIMEOUT)
+        logger.debug(f"Received response for datagram send request: {rsp}")
+        if rsp is None or rsp.perf != Performative.AGREE:
+            return False
+
+        if self.sendMode == Gateway.SEMI_BLOCKING:
+            if getattr(req, "reliability", None) is True:
+                return self._await_send_completion(req, delivery_only=True)
+            return True
+
+        logger.debug(f"Waiting for send completion notification for datagram with reliability={getattr(req, 'reliability', None)}")
+        return self._await_send_completion(req, delivery_only=False)
+
+    def receive(self, timeout: Optional[int] = None) -> Optional[DatagramNtf]: # type: ignore
         """Receive a datagram sent to the local node.
 
         If the socket is bound, only receives datagrams matching the bound protocol.
@@ -658,7 +763,7 @@ class UnetSocket:
         data: Union[bytes, bytearray, Sequence[int], Message, str],
         to: Optional[int],
         protocol: Optional[int],
-    ) -> Optional[DatagramReq]:
+    ) -> Optional[DatagramReq]: # type: ignore
         if isinstance(data, Message):
             if not isinstance(data, DatagramReq):
                 logger.error("Message provided is not a DatagramReq")
@@ -679,7 +784,9 @@ class UnetSocket:
                 req.messageClass = self.messageClass
                 req.remoteRecipient = self.remoteRecipient
                 req.mailbox = self.mailbox
-            req.ttl = self.ttl
+            if (isnan(self.ttl) == False):
+                logger.debug(f"Setting TTL to {self.ttl} for datagram request")
+                req.ttl = self.ttl
             if (self.priority is not None):
                 req.priority = self.priority
             if (self.robustness is not None):
@@ -699,7 +806,7 @@ class UnetSocket:
         ):
             logger.error(f"Invalid protocol number {req.protocol} for sending datagram")
             return None
-        logger.debug(f"Built [{req} protocol={req.protocol}, to={req.to}, data=({len(req.data)} bytes)] for sending")
+        logger.debug(f"Built {req} for sending")
         return req
 
     def _normalize_payload(
@@ -718,6 +825,7 @@ class UnetSocket:
         if self.provider is not None:
             return self.provider
         for service in (
+            Services.REMOTE,
             Services.TRANSPORT,
             Services.ROUTING,
             Services.LINK,
@@ -736,3 +844,48 @@ class UnetSocket:
         if override < 0:
             return Gateway.BLOCKING
         return override
+
+    def _await_send_completion(self, req: Message, delivery_only: bool) -> bool:
+        if self.gw is None:
+            return False
+        ntf = self.gw.receive(
+            lambda msg: self._matches_send_completion(msg, req, delivery_only),
+            self.REQUEST_TIMEOUT,
+        )
+        return self._is_successful_send_completion(ntf, delivery_only)
+
+    def _matches_send_completion(
+        self,
+        msg: Message,
+        req: Message,
+        delivery_only: bool,
+    ) -> bool:
+        if msg is None:
+            return False
+        if not self._is_send_completion_notification(msg, delivery_only):
+            return False
+        request_id = getattr(req, "msgID", None)
+        reply_to = getattr(msg, "inReplyTo", None)
+        if request_id is None:
+            return True
+        return reply_to == request_id
+
+    def _is_send_completion_notification(self, msg: Message, delivery_only: bool) -> bool:
+        clazz = getattr(msg, "__clazz__", "")
+        if delivery_only:
+            return isinstance(msg, (RemoteSuccessNtf, RemoteFailureNtf))
+        return (
+            isinstance(
+                msg,
+                (DatagramDeliveryNtf, DatagramFailureNtf, RemoteSuccessNtf, RemoteFailureNtf),
+            )
+            or clazz == "org.arl.unet.DatagramTransmissionNtf"
+        )
+
+    def _is_successful_send_completion(self, msg: Optional[Message], delivery_only: bool) -> bool:
+        if msg is None:
+            return False
+        if delivery_only:
+            return isinstance(msg, RemoteSuccessNtf)
+        clazz = getattr(msg, "__clazz__", "")
+        return isinstance(msg, (DatagramDeliveryNtf, RemoteSuccessNtf)) or clazz == "org.arl.unet.DatagramTransmissionNtf"

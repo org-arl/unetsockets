@@ -12,7 +12,7 @@ authors = [{name = "Chinmay Pendharkar", email = "chinmay@subnero.com"}]
 keywords = ["unet", "modem", "underwater", "communications"]
 requires-python = ">=3.9"
 dependencies = [
-    "fjagepy>=2.0.0,<3",
+    "fjagepy>=2.0.2,<3",
 ]
 
 [project.optional-dependencies]
