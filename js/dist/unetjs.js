@@ -2111,6 +2111,7 @@
     return [xScale, yScale];
   }
 
+  const BROADCAST_ADDR = 0;
   const REQUEST_TIMEOUT = 1000;
   const NON_BLOCKING = 0;
   const SEMI_BLOCKING = 1;
@@ -2620,7 +2621,7 @@
      * @returns {Promise<boolean>} - true if the Unet node agreed to send out the Datagram, false otherwise
      */
     async send(data, to=this._remoteAddress, protocol=this._remoteProtocol) {
-      if (to < 0 || this._gw == null) return false;
+      if (this._gw == null) return false;
       let req;
       if (Array.isArray(data)) {
         req = new DatagramReq();
@@ -2669,7 +2670,7 @@
       return await this._gw.receive(msg => {
         if (!(msg instanceof DatagramNtf)) return false;
         let p = msg.protocol;
-        if (msg.to != this._localAddress) return false;  // Datagram not addressed to this node
+        if (msg.to != BROADCAST_ADDR && msg.to != this._localAddress) return false;  // Datagram not addressed to this node
         if (p == Protocol.DATA || p >= Protocol.USER) {
           return this._localProtocol < 0 || this._localProtocol == p;
         }
