@@ -25,9 +25,9 @@ if (isBrowser){
   }, ];
 }
 
-// function delay(ms) {
-//   return new Promise(resolve => setTimeout(resolve, ms));
-// }
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 describe('A UnetSocket', function () {
   it('should be able to be constructed', async function () {
@@ -197,6 +197,21 @@ describe('A UnetSocket', function () {
     usock2.close();
   });
 
+  it('should be able track the changes to local node address', async function(){
+    let usock = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    expect(usock._localAddress).toBe(232);
+
+    // now change the local node address and check if the change is reflected in the UnetSocket
+    const nodeinfo = await usock.getGateway().agentForService(Services.NODE_INFO);
+    await nodeinfo.set('address', 123);
+    delay(300);
+    expect(usock._localAddress).toBe(123);
+    await nodeinfo.set('address', 232);
+    delay(300);
+    expect(usock._localAddress).toBe(232);
+
+    usock.close();
+  });
 });
 
 describe('Unet Utils', function () {

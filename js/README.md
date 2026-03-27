@@ -7,13 +7,13 @@ The library contains helper methods, commonly used [Messages](https://fjage.read
 ## Installation
 
 ```sh
-$ npm install unetjs
+$ pnpm install unetjs
 ...
 ```
 
 ## Documentation
 
-The API documentation of the latest version of unet.js is published at [https://github.com/org-arl/unet-contrib/tree/master/unetsocket/js/docs](https://github.com/org-arl/unet-contrib/tree/master/unetsocket/js/docs)
+The API documentation of the latest version of unet.js is published at [https://github.com/org-arl/unetsockets/tree/master/js/docs](https://github.com/org-arl/unetsockets/tree/master/js/docs)
 
 ## Versions
 

@@ -1,1 +1,1 @@
-dist/esm/unet.js
+../../dist/esm/unet.js

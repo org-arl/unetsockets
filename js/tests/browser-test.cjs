@@ -9,7 +9,7 @@ const port = 8000;
 let server = null;
 
 // Setup static web server for testing browser version
-console.log('Setting up local static server at http://'+ip+':'+port+'/test');
+console.log('Setting up local static server at http://'+ip+':'+port+'/tests');
 const file = new statik.Server('.');
 server = require('http').createServer(function (request, response) {
   request.addListener('end', function () {

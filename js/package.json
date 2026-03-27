@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/org-arl/unet-contrib.git"
+    "url": "git+https://github.com/org-arl/unetsockets.git"
   },
   "keywords": [
     "underwater",
@@ -33,9 +33,9 @@
   "author": "\"Chinmay Pendharkar (http://chinpen.net)",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/org-arl/unet-contrib/issues"
+    "url": "https://github.com/org-arl/unetsockets/issues"
   },
-  "homepage": "https://github.com/org-arl/unet-contrib#readme",
+  "homepage": "https://github.com/org-arl/unetsockets#readme",
   "dependencies": {
     "fjage": "2.3.0"
   },

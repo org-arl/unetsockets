@@ -1,4 +1,4 @@
-/* unet.js v5.1.0 2026-03-26T10:42:10.653Z */
+/* unet.js v5.1.0 2026-03-27T03:59:12.462Z */
 
 /* fjage.js v2.3.0 */
 
@@ -2130,35 +2130,53 @@ class UnetSocket {
 
   constructor(hostname, port, path='') {
     return (async () => {
-      this.gw = new Gateway({
+      this._gw = new Gateway({
         hostname : hostname,
         port : port,
         path : path
       });
-      this.localProtocol = -1;
-      this.remoteAddress = -1;
-      this.localAddress = -1;
-      this.remoteProtocol = Protocol.DATA;
-      this.timeout = 0;
-      this.provider = null;
+      this._localProtocol = -1;
+      this._remoteAddress = -1;
+      this._localAddress = -1;
+      this._remoteProtocol = Protocol.DATA;
+      this._timeout = 0;
+      this._provider = null;
+      this._paramChangeCallbacks = {};
 
       //for new UnetStack versions (5.2.0 and later)
-      this.gw.subscribe(this.gw.topic(UnetTopics.DATAGRAM));
+      this._gw.subscribe(this._gw.topic(UnetTopics.DATAGRAM));
 
       //for compatibility with older UnetStack versions (before 5.2.0)
-      const alist = await this.gw.agentsForService(Services.DATAGRAM);
-      alist.forEach(a => {this.gw.subscribe(this.gw.topic(a));});
+      const alist = await this._gw.agentsForService(Services.DATAGRAM);
+      alist.forEach(a => {this._gw.subscribe(this._gw.topic(a));});
 
-      // subscribe to paramchange for local address
-      this.gw.subscribe(this.gw.topic(UnetTopics.PARAMCHANGE));
-      this.gw.addMessageListener(msg => {
-        if (msg instanceof UnetMessages.ParamChangeNtf && msg.sender == 'node') {
-          if (msg.paramValues != null && Object.prototype.hasOwnProperty.call(msg.paramValues, 'address')) {
-            this.localAddress = msg.paramValues['address'];
+      // get local nodeinfo agent
+      const nodeinfo = await this._gw.agentForService(Services.NODE_INFO);
+
+      // subscribe to paramchange notifications for onParamChange callbacks
+      this._gw.subscribe(this._gw.topic(UnetTopics.PARAMCHANGE));
+      if (nodeinfo != null) this._gw.subscribe(this._gw.topic(nodeinfo)); // nodeinfo publishes param changes for local node parameters
+      this._gw.addMessageListener(msg => {
+        if (msg instanceof UnetMessages.ParamChangeNtf) {
+          const sender = (msg.sender instanceof AgentID) ? msg.sender.name : msg.sender;
+          if (msg.paramValues != null){
+            for (const p in msg.paramValues) {
+              // if p has dots inside then take the substring after the last dot as the parameter name,
+              // since many times fully qualified parameter names are used in the notifications
+              const paramName = p.includes('.') ? p.substring(p.lastIndexOf('.') + 1) : p;
+              const callback = this._paramChangeCallbacks[sender + '.' + paramName];
+              if (callback != null) callback(msg.paramValues[p]);
+            }
           }
         }
       });
-      this.localAddress = await this.getLocalAddress();
+
+      // get local node address and subscribe to changes in the local node address
+      if (nodeinfo != null) {
+        this.onParamChange(nodeinfo.name, 'address', (addr) => { this._localAddress = addr; });
+        this._localAddress = await nodeinfo.get('address');
+      }
+
       return this;
     })();
   }
@@ -2168,8 +2186,8 @@ class UnetSocket {
    * @returns {void}
    */
   close() {
-    this.gw.close();
-    this.gw = null;
+    this._gw.close();
+    this._gw = null;
   }
 
   /**
@@ -2177,7 +2195,7 @@ class UnetSocket {
    * @returns {boolean} - true if closed, false if open
    */
   isClosed() {
-    return this.gw == null;
+    return this._gw == null;
   }
 
   /**
@@ -2189,7 +2207,7 @@ class UnetSocket {
    */
   bind(protocol) {
     if (protocol == Protocol.DATA || (protocol >= Protocol.USER && protocol <= Protocol.MAX)) {
-      this.localProtocol = protocol;
+      this._localProtocol = protocol;
       return true;
     }
     return false;
@@ -2200,13 +2218,13 @@ class UnetSocket {
    * Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved.
    * @returns {void}
    */
-  unbind() { this.localProtocol = -1;}
+  unbind() { this._localProtocol = -1;}
 
   /**
    * Checks if a socket is bound.
    * @returns {boolean} - true if bound to a protocol, false if unbound
    */
-  isBound() { return this.localProtocol >= 0;}
+  isBound() { return this._localProtocol >= 0;}
 
   /**
    * Sets the default destination address and destination protocol number for datagrams sent
@@ -2222,8 +2240,8 @@ class UnetSocket {
    */
   connect(to, protocol) {
     if (to >= 0 && (protocol == Protocol.DATA || (protocol >= Protocol.USER && protocol <= Protocol.MAX))) {
-      this.remoteAddress = to;
-      this.remoteProtocol = protocol;
+      this._remoteAddress = to;
+      this._remoteProtocol = protocol;
       return true;
     }
     return false;
@@ -2235,23 +2253,23 @@ class UnetSocket {
    * @returns {void}
    */
   disconnect() {
-    this.remoteAddress = -1;
-    this.remoteProtocol = 0;
+    this._remoteAddress = -1;
+    this._remoteProtocol = 0;
   }
 
   /**
    * Checks if a socket is connected, i.e., has a default destination address and protocol number.
    * @returns {boolean} - true if connected, false otherwise
    */
-  isConnected() { return this.remoteAddress >= 0; }
+  isConnected() { return this._remoteAddress >= 0; }
 
   /**
    * Gets the local node address of the Unet node connected to.
    * @returns {Promise<int>} - local node address, or -1 on error
    */
   async getLocalAddress() {
-    if (this.gw == null) return -1;
-    const nodeinfo = await this.gw.agentForService(Services.NODE_INFO);
+    if (this._gw == null) return -1;
+    const nodeinfo = await this._gw.agentForService(Services.NODE_INFO);
     if (nodeinfo == null) return -1;
     const addr = await nodeinfo.get('address');
     return addr != null ? addr : -1;
@@ -2261,19 +2279,19 @@ class UnetSocket {
    * Gets the protocol number that the socket is bound to.
    * @returns {number}} - protocol number if socket is bound, -1 otherwise
    */
-  getLocalProtocol() { return this.localProtocol; }
+  getLocalProtocol() { return this._localProtocol; }
 
   /**
    * Gets the default destination node address for a connected socket.
    * @returns {number}} - default destination node address if connected, -1 otherwise
    */
-  getRemoteAddress() { return this.remoteAddress; }
+  getRemoteAddress() { return this._remoteAddress; }
 
   /**
    * Gets the default transmission protocol number.
    * @returns {number}} - default protocol number used to transmit a datagram
    */
-  getRemoteProtocol() { return this.remoteProtocol; }
+  getRemoteProtocol() { return this._remoteProtocol; }
 
   /**
    * Sets the timeout for datagram reception. A timeout of 0 means the
@@ -2285,14 +2303,14 @@ class UnetSocket {
    */
   setTimeout(ms) {
     if (ms < 0) ms = 0;
-    this.timeout = ms;
+    this._timeout = ms;
   }
 
   /**
    * Gets the timeout for datagram reception.
    * @returns {number} - timeout in milliseconds
    */
-  getTimeout() { return this.timeout; }
+  getTimeout() { return this._timeout; }
 
   /**
    * Transmits a datagram to the specified node address using the specified protocol.
@@ -2303,8 +2321,8 @@ class UnetSocket {
    * @param {number} protocol - protocol number
    * @returns {Promise<boolean>} - true if the Unet node agreed to send out the Datagram, false otherwise
    */
-  async send(data, to=this.remoteAddress, protocol=this.remoteProtocol) {
-    if (to < 0 || this.gw == null) return false;
+  async send(data, to=this._remoteAddress, protocol=this._remoteProtocol) {
+    if (to < 0 || this._gw == null) return false;
     var req;
     if (Array.isArray(data)){
       req = new DatagramReq();
@@ -2319,15 +2337,15 @@ class UnetSocket {
     let p = req.protocol;
     if (p != Protocol.DATA && (p < Protocol.USER || p > Protocol.MAX)) return false;
     if (req.recipient == null) {
-      if (this.provider == null) this.provider = await this.gw.agentForService(Services.TRANSPORT);
-      if (this.provider == null) this.provider = await this.gw.agentForService(Services.ROUTING);
-      if (this.provider == null) this.provider = await this.gw.agentForService(Services.LINK);
-      if (this.provider == null) this.provider = await this.gw.agentForService(Services.PHYSICAL);
-      if (this.provider == null) this.provider = await this.gw.agentForService(Services.DATAGRAM);
-      if (this.provider == null) return false;
-      req.recipient = this.provider;
+      if (this._provider == null) this._provider = await this._gw.agentForService(Services.TRANSPORT);
+      if (this._provider == null) this._provider = await this._gw.agentForService(Services.ROUTING);
+      if (this._provider == null) this._provider = await this._gw.agentForService(Services.LINK);
+      if (this._provider == null) this._provider = await this._gw.agentForService(Services.PHYSICAL);
+      if (this._provider == null) this._provider = await this._gw.agentForService(Services.DATAGRAM);
+      if (this._provider == null) return false;
+      req.recipient = this._provider;
     }
-    const rsp = await this.gw.request(req, REQUEST_TIMEOUT);
+    const rsp = await this._gw.request(req, REQUEST_TIMEOUT);
     return (rsp != null && rsp.perf == Performative.AGREE);
   }
 
@@ -2338,23 +2356,23 @@ class UnetSocket {
    * @returns {Promise<?DatagramNtf>} - datagram received by the socket
    */
   async receive() {
-    if (this.gw == null) return null;
-    return await this.gw.receive(msg => {
+    if (this._gw == null) return null;
+    return await this._gw.receive(msg => {
       if (!(msg instanceof DatagramNtf)) return false;
       let p = msg.protocol;
-      if (msg.to != this.localAddress) return false;  // Datagram not addressed to this node
+      if (msg.to != this._localAddress) return false;  // Datagram not addressed to this node
       if (p == Protocol.DATA || p >= Protocol.USER) {
-        return this.localProtocol < 0 || this.localProtocol == p;
+        return this._localProtocol < 0 || this._localProtocol == p;
       }
       return false;
-    }, this.timeout);
+    }, this._timeout);
   }
 
   /**
    * Gets a Gateway to provide low-level access to UnetStack.
    * @returns {Gateway} - underlying fjage Gateway supporting this socket
    */
-  getGateway() { return this.gw; }
+  getGateway() { return this._gw; }
 
   /**
    * Gets an AgentID providing a specified service for low-level access to UnetStack
@@ -2362,8 +2380,8 @@ class UnetSocket {
    * @returns {Promise<?AgentID>} - a promise which returns an {@link AgentID} that provides the service when resolved
    */
   async agentForService(svc) {
-    if (this.gw == null) return null;
-    return await this.gw.agentForService(svc);
+    if (this._gw == null) return null;
+    return await this._gw.agentForService(svc);
   }
 
   /**
@@ -2372,8 +2390,8 @@ class UnetSocket {
    * @returns {Promise<AgentID[]>} - a promise which returns an array of {@link AgentID|AgentIDs} that provides the service when resolved
    */
   async agentsForService(svc) {
-    if (this.gw == null) return null;
-    return await this.gw.agentsForService(svc);
+    if (this._gw == null) return null;
+    return await this._gw.agentsForService(svc);
   }
 
   /**
@@ -2382,8 +2400,8 @@ class UnetSocket {
    * @returns {AgentID} - AgentID for the given name
    */
   agent(name) {
-    if (this.gw == null) return null;
-    return this.gw.agent(name);
+    if (this._gw == null) return null;
+    return this._gw.agent(name);
   }
 
   /**
@@ -2397,9 +2415,34 @@ class UnetSocket {
     const req = new AddressResolutionReq(nodeName);
     req.name = nodeName;
     req.recipient = arp;
-    const rsp = await this.gw.request(req, REQUEST_TIMEOUT);
+    const rsp = await this._gw.request(req, REQUEST_TIMEOUT);
     if (rsp == null || ! Object.prototype.hasOwnProperty.call(rsp, 'address')) return null;
     return rsp.address;
+  }
+
+  /**
+   * Registers a callback function to be called when a parameter value changes for the local node. This
+   * uses the ParamChangeNtf messages published by the Unet node to notify of parameter changes. The callback
+   * function will be called with the new value of the parameter.
+   *
+   * @param {AgentID|string} agentId
+   * @param {string} paramName
+   * @param {function(object): void} callback
+   */
+  onParamChange(agentId, paramName, callback) {
+    if (agentId instanceof AgentID) agentId = agentId.name;
+    this._paramChangeCallbacks[agentId + '.' + paramName] = callback;
+  }
+
+  /**
+   * Removes a callback function registered to be called when a parameter value changes for the local node.
+   *
+   * @param {AgentID|string} agentId
+   * @param {string} paramName
+   */
+  removeParamChange(agentId, paramName) {
+    if (agentId instanceof AgentID) agentId = agentId.name;
+    delete this._paramChangeCallbacks[agentId + '.' + paramName];
   }
 }
 
