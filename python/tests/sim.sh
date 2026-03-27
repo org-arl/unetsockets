@@ -7,9 +7,9 @@ files=(tests/unet/unet-*)
 shopt -u nullglob
 DIR=${files[0]}
 
-# If JAVA_HOME env variable is not set, throw an error
-if [ -z "$JAVA_HOME" ]; then
-  echo "No JAVA_HOME found. Please make sure JDK8 is installed for running the simulator."
+# Ensure Java is available: either JAVA_HOME or java on PATH
+if [ -z "$JAVA_HOME" ] && ! command -v java >/dev/null 2>&1; then
+  echo "No Java runtime found. Please ensure JDK8 is installed and either JAVA_HOME is set or 'java' is available on PATH for running the simulator."
   exit 1
 fi
 

@@ -110,7 +110,7 @@ class UnetSocket:
         self._param_change_thread.start()
 
         # subscribe to paramchange for local address
-        if nodeinfo.address is not None:
+        if nodeinfo is not None:
             self.onParamChange("node", "address", self._update_local_address)
             self.localAddress = nodeinfo.address
 
@@ -800,13 +800,13 @@ class UnetSocket:
             return None
         return rsp.address
 
-    def onParamChange(self, agentId: Union[AgentID, str], paramName:str, callback: Callable[[ParamChangeNtf], None]) -> None:
+    def onParamChange(self, agentId: Union[AgentID, str], paramName:str, callback: Callable[[Any], None]) -> None:
         """Register a callback for parameter change notifications from a specific agent.
 
         Args:
             agentId: AgentID or name of the agent to monitor.
             paramName: Name of the parameter to watch for changes.
-            callback: Function to call with the ParamChangeNtf when the parameter changes.
+            callback: Function to call with the new parameter value when a change is detected.
 
         Example:
             >>> def on_address_change(ntf):
