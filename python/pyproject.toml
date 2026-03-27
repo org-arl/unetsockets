@@ -17,7 +17,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8"
+    "build",
+    "pytest>=8",
+    "twine",
 ]
 
 [project.urls]
