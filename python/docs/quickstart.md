@@ -192,8 +192,8 @@ from unetpy import UnetSocket, Services
 
 with UnetSocket("localhost", 1100) as sock:
     # Subscribe to parameter changes
-    node = sock.agentForService(Services.NODE)
-    sock.onParameterChange(node, "address", lambda new_value: print(f"Node address changed to {new_value}"))
+    node = sock.agentForService(Services.NODE_INFO)
+    sock.onParamChange(node, "address", lambda new_value: print(f"Node address changed to {new_value}"))
 ```
 
 
