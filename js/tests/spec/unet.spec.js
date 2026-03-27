@@ -1,4 +1,4 @@
-/* global it expect describe AgentID UnetMessages UnetTopics Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine*/
+/* global it expect describe AgentID UnetMessages Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine spyOn*/
 
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
@@ -307,10 +307,10 @@ describe('A UnetSocket', function () {
     // now change the local node address and check if the change is reflected in the UnetSocket
     const nodeinfo = await usock.getGateway().agentForService(Services.NODE_INFO);
     await nodeinfo.set('address', 123);
-    delay(300);
+    await delay(300);
     expect(usock._localAddress).toBe(123);
     await nodeinfo.set('address', 232);
-    delay(300);
+    await delay(300);
     expect(usock._localAddress).toBe(232);
 
     usock.close();
