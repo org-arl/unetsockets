@@ -65,6 +65,16 @@ The UnetSocket API is a high-level API exposed by UnetStack to allow users to co
 
 The JavaScript version of the UnetSocket API allows a user to connect to a node in an Unet from a browser/Node.JS-based application and communicate with other nodes in the Unet. The Datagrams received on those nodes could be consumed by other instances of the UnetSocket, either directly on the node, or on a remote [Gateway](https://fjage.readthedocs.io/en/latest/remote.html#interacting-with-agents-using-a-gateway) connected to that node.
 
+Socket-level transmission metadata can be configured once and applied to subsequent sends using methods such as `setTTL()`, `setPriority()`, `setReliability()`, `setRoute()`, `setMimeType()`, `setRemoteRecipient()`, `setMailbox()`, and `setMessageClass()`. A specific service provider may also be forced with `setServiceProvider()`.
+
+`send()` now supports three send modes via `setSendMode()`:
+
+- `UnetSocket.NON_BLOCKING`: returns `true` once the request has been accepted for sending.
+- `UnetSocket.SEMI_BLOCKING` (default): waits for an `AGREE`, and if reliability is enabled, also waits for a delivery/success notification.
+- `UnetSocket.BLOCKING`: waits for an `AGREE` followed by a transmission, delivery, or failure notification.
+
+Passing a `DatagramReq` directly to `send()` is still supported for compatibility, but it is deprecated. Prefer setting socket defaults and calling `send(data, to, protocol)` instead.
+
 ### Importing/Modules
 
 A distribution-ready bundle is available for types of module systems commonly used in the JS world. Examples of how to use it for the different module systems are available in the [examples](/examples) directory.

@@ -22,49 +22,79 @@
     *   [setTimeout][18]
         *   [Parameters][19]
     *   [getTimeout][20]
-    *   [send][21]
+    *   [setTTL][21]
         *   [Parameters][22]
-    *   [receive][23]
-    *   [getGateway][24]
-    *   [agentForService][25]
-        *   [Parameters][26]
-    *   [agentsForService][27]
+    *   [getTTL][23]
+    *   [setPriority][24]
+        *   [Parameters][25]
+    *   [getPriority][26]
+    *   [setReliability][27]
         *   [Parameters][28]
-    *   [agent][29]
-        *   [Parameters][30]
-    *   [host][31]
-        *   [Parameters][32]
-    *   [onParamChange][33]
+    *   [getReliability][29]
+    *   [setRoute][30]
+        *   [Parameters][31]
+    *   [getRoute][32]
+    *   [setMimeType][33]
         *   [Parameters][34]
-    *   [removeParamChange][35]
-        *   [Parameters][36]
-*   [Protocol][37]
-*   [UnetMessages][38]
-*   [toGps][39]
-    *   [Parameters][40]
-*   [toLocal][41]
-    *   [Parameters][42]
-*   [DatagramReq][43]
-    *   [Properties][44]
-*   [DatagramNtf][45]
-    *   [Properties][46]
-*   [AgentID][47]
-*   [Services][48]
-*   [Performative][49]
-*   [MessageClass][50]
+    *   [getMimeType][35]
+    *   [setRemoteRecipient][36]
+        *   [Parameters][37]
+    *   [getRemoteRecipient][38]
+    *   [setMailbox][39]
+        *   [Parameters][40]
+    *   [getMailbox][41]
+    *   [setMessageClass][42]
+        *   [Parameters][43]
+    *   [getMessageClass][44]
+    *   [setServiceProvider][45]
+        *   [Parameters][46]
+    *   [getServiceProvider][47]
+    *   [setSendMode][48]
+        *   [Parameters][49]
+    *   [getSendMode][50]
+    *   [send][51]
+        *   [Parameters][52]
+    *   [receive][53]
+    *   [getGateway][54]
+    *   [agentForService][55]
+        *   [Parameters][56]
+    *   [agentsForService][57]
+        *   [Parameters][58]
+    *   [agent][59]
+        *   [Parameters][60]
+    *   [host][61]
+        *   [Parameters][62]
+    *   [onParamChange][63]
+        *   [Parameters][64]
+    *   [removeParamChange][65]
+        *   [Parameters][66]
+*   [Protocol][67]
+*   [UnetMessages][68]
+*   [toGps][69]
+    *   [Parameters][70]
+*   [toLocal][71]
+    *   [Parameters][72]
+*   [DatagramReq][73]
+    *   [Properties][74]
+*   [DatagramNtf][75]
+    *   [Properties][76]
+*   [AgentID][77]
+*   [Services][78]
+*   [Performative][79]
+*   [MessageClass][80]
 
 ## UnetSocket
 
 Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
-[Promise][51] instead of the constructed UnetSocket object. Use `await` or `.then()` to get
+[Promise][81] instead of the constructed UnetSocket object. Use `await` or `.then()` to get
 a reference to the UnetSocket object. Based on if this is run in a Browser or Node.js,
 it will internally connect over WebSockets or TCP respectively.
 
 ### Parameters
 
-*   `hostname` **[string][52]?** hostname/ip address of the master container to connect to
-*   `port` **[string][52]?** port number of the master container to connect to
-*   `path` **[string][52]** path of the master container to connect to (for WebSockets) (optional, default `''`)
+*   `hostname` **[string][82]?** hostname/ip address of the master container to connect to
+*   `port` **[string][82]?** port number of the master container to connect to
+*   `path` **[string][82]** path of the master container to connect to (for WebSockets) (optional, default `''`)
 
 ### Examples
 
@@ -72,7 +102,7 @@ it will internally connect over WebSockets or TCP respectively.
 let socket = await new UnetSocket('localhost', 8081, '/ws/');
 ```
 
-Returns **[Promise][51]<[UnetSocket][1]>** Promise which resolves to the UnetSocket object being constructed
+Returns **[Promise][81]<[UnetSocket][1]>** Promise which resolves to the UnetSocket object being constructed
 
 ### close
 
@@ -84,7 +114,7 @@ Returns **void**&#x20;
 
 Checks if a socket is closed.
 
-Returns **[boolean][53]** true if closed, false if open
+Returns **[boolean][83]** true if closed, false if open
 
 ### bind
 
@@ -94,9 +124,9 @@ and cannot be bound. Unbound sockets listen to all unreserved
 
 #### Parameters
 
-*   `protocol` **[Protocol][37]** protocol number to listen for
+*   `protocol` **[Protocol][67]** protocol number to listen for
 
-Returns **[boolean][53]** true on success, false on failure
+Returns **[boolean][83]** true on success, false on failure
 
 ### unbind
 
@@ -109,7 +139,7 @@ Returns **void**&#x20;
 
 Checks if a socket is bound.
 
-Returns **[boolean][53]** true if bound to a protocol, false if unbound
+Returns **[boolean][83]** true if bound to a protocol, false if unbound
 
 ### connect
 
@@ -122,10 +152,10 @@ and cannot be used for sending datagrams using the socket.
 
 #### Parameters
 
-*   `to` **[number][54]** default destination node address
-*   `protocol` **[Protocol][37]** default protocol number
+*   `to` **[number][84]** default destination node address
+*   `protocol` **[Protocol][67]** default protocol number
 
-Returns **[boolean][53]** true on success, false on failure
+Returns **[boolean][83]** true on success, false on failure
 
 ### disconnect
 
@@ -138,41 +168,41 @@ Returns **void**&#x20;
 
 Checks if a socket is connected, i.e., has a default destination address and protocol number.
 
-Returns **[boolean][53]** true if connected, false otherwise
+Returns **[boolean][83]** true if connected, false otherwise
 
 ### getLocalAddress
 
 Gets the local node address of the Unet node connected to.
 
-Returns **[Promise][51]\<int>** local node address, or -1 on error
+Returns **[Promise][81]\<int>** local node address, or -1 on error
 
 ### getLocalProtocol
 
 Gets the protocol number that the socket is bound to.
 
-Returns **[number][54]** protocol number if socket is bound, -1 otherwise
+Returns **[number][84]** protocol number if socket is bound, -1 otherwise
 
 ### getRemoteAddress
 
 Gets the default destination node address for a connected socket.
 
-Returns **[number][54]** default destination node address if connected, -1 otherwise
+Returns **[number][84]** default destination node address if connected, -1 otherwise
 
 ### getRemoteProtocol
 
 Gets the default transmission protocol number.
 
-Returns **[number][54]** default protocol number used to transmit a datagram
+Returns **[number][84]** default protocol number used to transmit a datagram
 
 ### setTimeout
 
 Sets the timeout for datagram reception. A timeout of 0 means the
-[receive method][55] will check any appropriate
+[receive method][85] will check any appropriate
 Datagram has already been received (and is cached) else return immediately.
 
 #### Parameters
 
-*   `ms` **[number][54]** timeout in milliseconds
+*   `ms` **[number][84]** timeout in milliseconds
 
 Returns **void**&#x20;
 
@@ -180,7 +210,185 @@ Returns **void**&#x20;
 
 Gets the timeout for datagram reception.
 
-Returns **[number][54]** timeout in milliseconds
+Returns **[number][84]** timeout in milliseconds
+
+### setTTL
+
+Sets the default time-to-live for datagrams sent using this socket.
+TTL is advisory; an agent may choose to ignore it.
+
+#### Parameters
+
+*   `ttl` **[number][84]** time-to-live in seconds
+
+Returns **void**&#x20;
+
+### getTTL
+
+Gets the default time-to-live for datagrams sent using this socket.
+
+Returns **[number][84]** time-to-live in seconds, or NaN if not set
+
+### setPriority
+
+Sets the default priority for datagrams sent using this socket.
+
+#### Parameters
+
+*   `priority` **any** priority value; interpretation is provider-dependent
+
+Returns **void**&#x20;
+
+### getPriority
+
+Gets the default priority for datagrams sent using this socket.
+
+Returns **any** priority value, or null if not set
+
+### setReliability
+
+Sets the default reliability for datagrams sent using this socket.
+When set to true, the socket will request reliable delivery and, in
+SEMI\_BLOCKING mode, will wait for a delivery confirmation before returning.
+
+#### Parameters
+
+*   `reliability` **[boolean][83]** true for reliable delivery, false for unreliable
+
+Returns **void**&#x20;
+
+### getReliability
+
+Gets the default reliability setting for datagrams sent using this socket.
+
+Returns **([boolean][83] | null)** true if reliable, false if unreliable, null if not set
+
+### setRoute
+
+Sets the default route identifier for datagrams sent using this socket.
+Route selection is provider-dependent; not all providers support explicit routing.
+
+#### Parameters
+
+*   `route` **any** route identifier
+
+Returns **void**&#x20;
+
+### getRoute
+
+Gets the default route identifier for datagrams sent using this socket.
+
+Returns **any** route identifier, or null if not set
+
+### setMimeType
+
+Sets the default MIME type describing the datagram payload.
+This can be used by REMOTE service providers to apply content-aware compression.
+
+#### Parameters
+
+*   `mimeType` **[string][82]** MIME type string (e.g. 'application/json')
+
+Returns **void**&#x20;
+
+### getMimeType
+
+Gets the default MIME type for datagrams sent using this socket.
+
+Returns **([string][82] | null)** MIME type string, or null if not set
+
+### setRemoteRecipient
+
+Sets the default remote recipient for datagrams sent using this socket.
+Used by REMOTE service providers to address a specific entity on the remote node.
+
+#### Parameters
+
+*   `remoteRecipient` **any** remote recipient identifier (e.g. an AgentID or name string)
+
+Returns **void**&#x20;
+
+### getRemoteRecipient
+
+Gets the default remote recipient for datagrams sent using this socket.
+
+Returns **any** remote recipient identifier, or null if not set
+
+### setMailbox
+
+Sets the default mailbox name for datagrams sent using this socket.
+Mailboxes are used by REMOTE service providers to deliver messages
+to a named queue on the remote node.
+
+#### Parameters
+
+*   `mailbox` **[string][82]** mailbox name
+
+Returns **void**&#x20;
+
+### getMailbox
+
+Gets the default mailbox name for datagrams sent using this socket.
+
+Returns **([string][82] | null)** mailbox name, or null if not set
+
+### setMessageClass
+
+Sets the default application message class for datagrams sent using this socket.
+Used by REMOTE service providers to associate a fully-qualified class name with the payload.
+
+#### Parameters
+
+*   `messageClass` **[string][82]** fully-qualified message class name (e.g. 'org.example.Status')
+
+Returns **void**&#x20;
+
+### getMessageClass
+
+Gets the default application message class for datagrams sent using this socket.
+
+Returns **([string][82] | null)** message class name, or null if not set
+
+### setServiceProvider
+
+Overrides the service provider used to transmit datagrams. When set, provider
+auto-selection is bypassed and all sends go through the specified agent.
+Pass null to re-enable auto-selection.
+
+#### Parameters
+
+*   `provider` **([AgentID][77] | [string][82] | null)** agent id, agent name string, or null to clear the override
+
+Returns **void**&#x20;
+
+### getServiceProvider
+
+Gets the currently configured service provider override.
+
+Returns **([AgentID][77] | null)** the override agent id, or null if auto-selection is active
+
+### setSendMode
+
+Sets the send mode that controls how send() behaves after the provider accepts a request:
+
+*   `UnetSocket.NON_BLOCKING` (0): returns immediately after the provider agrees.
+*   `UnetSocket.SEMI_BLOCKING` (1): if reliability is not true, returns after AGREE; otherwise
+    waits for a delivery confirmation (RemoteDeliveryNtf / DatagramDeliveryNtf) or failure.
+*   `UnetSocket.BLOCKING` (2): waits for a transmission or delivery notification
+    (DatagramTransmissionNtf, DatagramDeliveryNtf) before returning.
+    The default is SEMI\_BLOCKING.
+
+#### Parameters
+
+*   `sendMode` **[number][84]** one of UnetSocket.NON\_BLOCKING, SEMI\_BLOCKING, or BLOCKING
+
+Returns **void**&#x20;
+
+### getSendMode
+
+Gets the current send mode.
+
+Returns **[number][84]** current send mode (NON\_BLOCKING=0, SEMI\_BLOCKING=1, BLOCKING=2)
 
 ### send
 
@@ -190,18 +398,18 @@ and cannot be used for sending datagrams using the socket.
 
 #### Parameters
 
-*   `data` **([Array][56]<[number][54]> | [DatagramReq][43])** data to be sent over the socket as an Array of bytes or DatagramReq
-*   `to` **[number][54]** destination node address (optional, default `this._remoteAddress`)
-*   `protocol` **[number][54]** protocol number (optional, default `this._remoteProtocol`)
+*   `data` **([Array][86]<[number][84]> | [DatagramReq][73])** data to be sent over the socket as an Array of bytes or DatagramReq
+*   `to` **[number][84]** destination node address (optional, default `this._remoteAddress`)
+*   `protocol` **[number][84]** protocol number (optional, default `this._remoteProtocol`)
 
-Returns **[Promise][51]<[boolean][53]>** true if the Unet node agreed to send out the Datagram, false otherwise
+Returns **[Promise][81]<[boolean][83]>** true if the Unet node agreed to send out the Datagram, false otherwise
 
 ### receive
 
 Receives a datagram sent to the local node and the bound protocol number. If the socket is unbound,
 then datagrams with all unreserved protocols are received. Any broadcast datagrams are also received.
 
-Returns **[Promise][51]<[DatagramNtf][45]?>** datagram received by the socket
+Returns **[Promise][81]<[DatagramNtf][75]?>** datagram received by the socket
 
 ### getGateway
 
@@ -215,17 +423,17 @@ Gets an AgentID providing a specified service for low-level access to UnetStack
 
 #### Parameters
 
-*   `svc` **[string][52]** the named service of interest
+*   `svc` **[string][82]** the named service of interest
 
-Returns **[Promise][51]<[AgentID][47]?>** a promise which returns an [AgentID][47] that provides the service when resolved
+Returns **[Promise][81]<[AgentID][77]?>** a promise which returns an [AgentID][77] that provides the service when resolved
 
 ### agentsForService
 
 #### Parameters
 
-*   `svc` **[string][52]** the named service of interest
+*   `svc` **[string][82]** the named service of interest
 
-Returns **[Promise][51]<[Array][56]<[AgentID][47]>>** a promise which returns an array of [AgentIDs][47] that provides the service when resolved
+Returns **[Promise][81]<[Array][86]<[AgentID][77]>>** a promise which returns an array of [AgentIDs][77] that provides the service when resolved
 
 ### agent
 
@@ -233,9 +441,9 @@ Gets a named AgentID for low-level access to UnetStack.
 
 #### Parameters
 
-*   `name` **[string][52]** name of agent
+*   `name` **[string][82]** name of agent
 
-Returns **[AgentID][47]** AgentID for the given name
+Returns **[AgentID][77]** AgentID for the given name
 
 ### host
 
@@ -243,9 +451,9 @@ Resolve node name to node address.
 
 #### Parameters
 
-*   `nodeName` **[string][52]** name of the node to resolve
+*   `nodeName` **[string][82]** name of the node to resolve
 
-Returns **[Promise][51]<[number][54]?>** address of the node, or null if unable to resolve
+Returns **[Promise][81]<[number][84]?>** address of the node, or null if unable to resolve
 
 ### onParamChange
 
@@ -255,9 +463,9 @@ function will be called with the new value of the parameter.
 
 #### Parameters
 
-*   `agentId` **([AgentID][47] | [string][52])**&#x20;
-*   `paramName` **[string][52]**&#x20;
-*   `callback` **function ([object][57]): void**&#x20;
+*   `agentId` **([AgentID][77] | [string][82])**&#x20;
+*   `paramName` **[string][82]**&#x20;
+*   `callback` **function ([object][87]): void**&#x20;
 
 ### removeParamChange
 
@@ -265,20 +473,20 @@ Removes a callback function registered to be called when a parameter value chang
 
 #### Parameters
 
-*   `agentId` **([AgentID][47] | [string][52])**&#x20;
-*   `paramName` **[string][52]**&#x20;
+*   `agentId` **([AgentID][77] | [string][82])**&#x20;
+*   `paramName` **[string][82]**&#x20;
 
 ## Protocol
 
 Well-known protocol number assignments used in UnetStack
 
-Type: [Object][57]<[string][52], [number][54]>
+Type: [Object][87]<[string][82], [number][84]>
 
 ## UnetMessages
 
 Well-known protocol Messages used in UnetStack
 
-Type: [Object][57]<[string][52], [MessageClass][50]>
+Type: [Object][87]<[string][82], [MessageClass][80]>
 
 ## toGps
 
@@ -286,11 +494,11 @@ Convert coordinates from a local coordinates to GPS coordinate
 
 ### Parameters
 
-*   `origin` **[Array][56]** Local coordinate system's origin as `[latitude, longitude]`
-*   `x` **[Number][54]** X coordinate of the local coordinate to be converted
-*   `y` **[Number][54]** Y coordinate of the local coordinate to be converted
+*   `origin` **[Array][86]** Local coordinate system's origin as `[latitude, longitude]`
+*   `x` **[Number][84]** X coordinate of the local coordinate to be converted
+*   `y` **[Number][84]** Y coordinate of the local coordinate to be converted
 
-Returns **[Array][56]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
+Returns **[Array][86]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
 
 ## toLocal
 
@@ -298,11 +506,11 @@ Convert coordinates from a GPS coordinates to local coordinate
 
 ### Parameters
 
-*   `origin` **[Array][56]** Local coordinate system's origin as `[latitude, longitude]`
-*   `lat` **[Number][54]** Latitude of the GPS coordinate to be converted
-*   `lon` **[Number][54]** Longitude of the GPS coordinate to be converted
+*   `origin` **[Array][86]** Local coordinate system's origin as `[latitude, longitude]`
+*   `lat` **[Number][84]** Latitude of the GPS coordinate to be converted
+*   `lon` **[Number][84]** Longitude of the GPS coordinate to be converted
 
-Returns **[Array][56]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
+Returns **[Array][86]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
 
 ## DatagramReq
 
@@ -312,12 +520,18 @@ Type: Message
 
 ### Properties
 
-*   `data` **[Array][56]<[number][54]>** data as an Array of bytes
-*   `from` **[number][54]** from/source node address
-*   `to` **[number][54]** to/destination node address
-*   `protocol` **[number][54]** protocol number to be used to send this Datagram
-*   `reliability` **[boolean][53]** true if Datagram should be reliable, false if unreliable
-*   `ttl` **[number][54]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+*   `data` **[Array][86]<[number][84]>** data as an Array of bytes
+*   `from` **[number][84]** from/source node address
+*   `to` **[number][84]** to/destination node address
+*   `protocol` **[number][84]** protocol number to be used to send this Datagram
+*   `priority` **any** priority assigned to the datagram request
+*   `reliability` **[boolean][83]** true if Datagram should be reliable, false if unreliable
+*   `ttl` **[number][84]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+*   `route` **any** route identifier to use when supported by the provider
+*   `mimeType` **[string][82]** MIME type describing the payload
+*   `remoteRecipient` **any** recipient identifier used by REMOTE service providers
+*   `mailbox` **[string][82]** mailbox name used by REMOTE service providers
+*   `messageClass` **any** application message class used by REMOTE service providers
 
 ## DatagramNtf
 
@@ -327,33 +541,33 @@ Type: Message
 
 ### Properties
 
-*   `data` **[Array][56]<[number][54]>** data as an Array of bytes
-*   `from` **[number][54]** from/source node address
-*   `to` **[number][54]** to/destination node address
-*   `protocol` **[number][54]** protocol number to be used to send this Datagram
-*   `ttl` **[number][54]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+*   `data` **[Array][86]<[number][84]>** data as an Array of bytes
+*   `from` **[number][84]** from/source node address
+*   `to` **[number][84]** to/destination node address
+*   `protocol` **[number][84]** protocol number to be used to send this Datagram
+*   `ttl` **[number][84]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
 
 ## AgentID
 
-*   **See**: [fjåge.js Documentation][58]
+*   **See**: [fjåge.js Documentation][88]
 
 An identifier for an agent or a topic.
 
 ## Services
 
-*   **See**: [fjåge.js Documentation][58]
+*   **See**: [fjåge.js Documentation][88]
 
 Services supported by fjage agents.
 
 ## Performative
 
-*   **See**: [fjåge.js Documentation][58]
+*   **See**: [fjåge.js Documentation][88]
 
 An action represented by a message.
 
 ## MessageClass
 
-*   **See**: [fjåge.js Documentation][58]
+*   **See**: [fjåge.js Documentation][88]
 
 Function to creates a unqualified message class based on a fully qualified name.
 
@@ -397,78 +611,138 @@ Function to creates a unqualified message class based on a fully qualified name.
 
 [20]: #gettimeout
 
-[21]: #send
+[21]: #setttl
 
 [22]: #parameters-4
 
-[23]: #receive
+[23]: #getttl
 
-[24]: #getgateway
+[24]: #setpriority
 
-[25]: #agentforservice
+[25]: #parameters-5
 
-[26]: #parameters-5
+[26]: #getpriority
 
-[27]: #agentsforservice
+[27]: #setreliability
 
 [28]: #parameters-6
 
-[29]: #agent
+[29]: #getreliability
 
-[30]: #parameters-7
+[30]: #setroute
 
-[31]: #host
+[31]: #parameters-7
 
-[32]: #parameters-8
+[32]: #getroute
 
-[33]: #onparamchange
+[33]: #setmimetype
 
-[34]: #parameters-9
+[34]: #parameters-8
 
-[35]: #removeparamchange
+[35]: #getmimetype
 
-[36]: #parameters-10
+[36]: #setremoterecipient
 
-[37]: #protocol
+[37]: #parameters-9
 
-[38]: #unetmessages
+[38]: #getremoterecipient
 
-[39]: #togps
+[39]: #setmailbox
 
-[40]: #parameters-11
+[40]: #parameters-10
 
-[41]: #tolocal
+[41]: #getmailbox
 
-[42]: #parameters-12
+[42]: #setmessageclass
 
-[43]: #datagramreq
+[43]: #parameters-11
 
-[44]: #properties
+[44]: #getmessageclass
 
-[45]: #datagramntf
+[45]: #setserviceprovider
 
-[46]: #properties-1
+[46]: #parameters-12
 
-[47]: #agentid
+[47]: #getserviceprovider
 
-[48]: #services
+[48]: #setsendmode
 
-[49]: #performative
+[49]: #parameters-13
 
-[50]: #messageclass
+[50]: #getsendmode
 
-[51]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[51]: #send
 
-[52]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[52]: #parameters-14
 
-[53]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[53]: #receive
 
-[54]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[54]: #getgateway
 
-[55]: #unetsocketreceive
+[55]: #agentforservice
 
-[56]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[56]: #parameters-15
 
-[57]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[57]: #agentsforservice
 
-[58]: https://org-arl.github.io/fjage/jsdoc/
+[58]: #parameters-16
+
+[59]: #agent
+
+[60]: #parameters-17
+
+[61]: #host
+
+[62]: #parameters-18
+
+[63]: #onparamchange
+
+[64]: #parameters-19
+
+[65]: #removeparamchange
+
+[66]: #parameters-20
+
+[67]: #protocol
+
+[68]: #unetmessages
+
+[69]: #togps
+
+[70]: #parameters-21
+
+[71]: #tolocal
+
+[72]: #parameters-22
+
+[73]: #datagramreq
+
+[74]: #properties
+
+[75]: #datagramntf
+
+[76]: #properties-1
+
+[77]: #agentid
+
+[78]: #services
+
+[79]: #performative
+
+[80]: #messageclass
+
+[81]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[82]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[83]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[84]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[85]: #unetsocketreceive
+
+[86]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[87]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[88]: https://org-arl.github.io/fjage/jsdoc/

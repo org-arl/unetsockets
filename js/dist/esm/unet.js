@@ -1,4 +1,4 @@
-/* unet.js v5.1.0 2026-03-27T03:59:12.462Z */
+/* unet.js v5.1.0 2026-03-27T06:24:19.107Z */
 
 /* fjage.js v2.3.0 */
 
@@ -1982,6 +1982,7 @@ let UnetMessages = {
   'DatagramNtf'            : MessageClass('org.arl.unet.DatagramNtf'),
   'DatagramProgressNtf'    : MessageClass('org.arl.unet.DatagramProgressNtf'),
   'DatagramReq'            : MessageClass('org.arl.unet.DatagramReq'),
+  'DatagramTransmissionNtf': MessageClass('org.arl.unet.DatagramTransmissionNtf'),
   'ParamChangeNtf'         : MessageClass('org.arl.unet.ParamChangeNtf'),
   'RefuseRsp'              : MessageClass('org.arl.unet.RefuseRsp'),
   'FailureNtf'             : MessageClass('org.arl.unet.FailureNtf'),
@@ -2051,6 +2052,7 @@ let UnetMessages = {
   'RemoteFileGetReq'       : MessageClass('org.arl.unet.remote.RemoteFileGetReq'),
   'RemoteFileNtf'          : MessageClass('org.arl.unet.remote.RemoteFileNtf'),
   'RemoteFilePutReq'       : MessageClass('org.arl.unet.remote.RemoteFilePutReq'),
+  'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
   'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
   'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf'),
   'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq'),
@@ -2106,10 +2108,31 @@ function _initConv(lat){
 }
 
 const REQUEST_TIMEOUT = 1000;
+const NON_BLOCKING = 0;
+const SEMI_BLOCKING = 1;
+const BLOCKING = 2;
 
 const AddressResolutionReq = UnetMessages.AddressResolutionReq;
+const DatagramDeliveryNtf = UnetMessages.DatagramDeliveryNtf;
+const DatagramFailureNtf = UnetMessages.DatagramFailureNtf;
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
+const DatagramTransmissionNtf = UnetMessages.DatagramTransmissionNtf;
+const RemoteDeliveryNtf = UnetMessages.RemoteDeliveryNtf;
+const RemoteFailureNtf = UnetMessages.RemoteFailureNtf;
+const RemoteSuccessNtf = UnetMessages.RemoteSuccessNtf;
+
+function isReservedProtocol(protocol) {
+  return protocol != Protocol.DATA && (protocol < Protocol.USER || protocol > Protocol.MAX);
+}
+
+function hasValue(value) {
+  return value !== undefined && value !== null;
+}
+
+function hasFiniteNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
 /**
  * Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
  * {@link Promise} instead of the constructed UnetSocket object. Use `await` or `.then()` to get
@@ -2140,7 +2163,17 @@ class UnetSocket {
       this._localAddress = -1;
       this._remoteProtocol = Protocol.DATA;
       this._timeout = 0;
-      this._provider = null;
+      this._serviceProvider = null;
+      this._ttl = NaN;
+      this._priority = null;
+      this._reliability = null;
+      this._route = null;
+      this._mimeType = null;
+      this._remoteRecipient = null;
+      this._mailbox = null;
+      this._messageClass = null;
+      this._sendMode = SEMI_BLOCKING;
+      this._warnedDeprecatedSend = false;
       this._paramChangeCallbacks = {};
 
       //for new UnetStack versions (5.2.0 and later)
@@ -2277,19 +2310,19 @@ class UnetSocket {
 
   /**
    * Gets the protocol number that the socket is bound to.
-   * @returns {number}} - protocol number if socket is bound, -1 otherwise
+   * @returns {number} - protocol number if socket is bound, -1 otherwise
    */
   getLocalProtocol() { return this._localProtocol; }
 
   /**
    * Gets the default destination node address for a connected socket.
-   * @returns {number}} - default destination node address if connected, -1 otherwise
+   * @returns {number} - default destination node address if connected, -1 otherwise
    */
   getRemoteAddress() { return this._remoteAddress; }
 
   /**
    * Gets the default transmission protocol number.
-   * @returns {number}} - default protocol number used to transmit a datagram
+   * @returns {number} - default protocol number used to transmit a datagram
    */
   getRemoteProtocol() { return this._remoteProtocol; }
 
@@ -2313,6 +2346,267 @@ class UnetSocket {
   getTimeout() { return this._timeout; }
 
   /**
+   * Sets the default time-to-live for datagrams sent using this socket.
+   * TTL is advisory; an agent may choose to ignore it.
+   * @param {number} ttl - time-to-live in seconds
+   * @returns {void}
+   */
+  setTTL(ttl) {
+    this._ttl = ttl;
+  }
+
+  /**
+   * Gets the default time-to-live for datagrams sent using this socket.
+   * @returns {number} - time-to-live in seconds, or NaN if not set
+   */
+  getTTL() {
+    return this._ttl;
+  }
+
+  /**
+   * Sets the default priority for datagrams sent using this socket.
+   * @param {*} priority - priority value; interpretation is provider-dependent
+   * @returns {void}
+   */
+  setPriority(priority) {
+    this._priority = priority;
+  }
+
+  /**
+   * Gets the default priority for datagrams sent using this socket.
+   * @returns {*} - priority value, or null if not set
+   */
+  getPriority() {
+    return this._priority;
+  }
+
+  /**
+   * Sets the default reliability for datagrams sent using this socket.
+   * When set to true, the socket will request reliable delivery and, in
+   * SEMI_BLOCKING mode, will wait for a delivery confirmation before returning.
+   * @param {boolean} reliability - true for reliable delivery, false for unreliable
+   * @returns {void}
+   */
+  setReliability(reliability) {
+    this._reliability = reliability;
+  }
+
+  /**
+   * Gets the default reliability setting for datagrams sent using this socket.
+   * @returns {boolean|null} - true if reliable, false if unreliable, null if not set
+   */
+  getReliability() {
+    return this._reliability;
+  }
+
+  /**
+   * Sets the default route identifier for datagrams sent using this socket.
+   * Route selection is provider-dependent; not all providers support explicit routing.
+   * @param {*} route - route identifier
+   * @returns {void}
+   */
+  setRoute(route) {
+    this._route = route;
+  }
+
+  /**
+   * Gets the default route identifier for datagrams sent using this socket.
+   * @returns {*} - route identifier, or null if not set
+   */
+  getRoute() {
+    return this._route;
+  }
+
+  /**
+   * Sets the default MIME type describing the datagram payload.
+   * This can be used by REMOTE service providers to apply content-aware compression.
+   * @param {string} mimeType - MIME type string (e.g. 'application/json')
+   * @returns {void}
+   */
+  setMimeType(mimeType) {
+    this._mimeType = mimeType;
+  }
+
+  /**
+   * Gets the default MIME type for datagrams sent using this socket.
+   * @returns {string|null} - MIME type string, or null if not set
+   */
+  getMimeType() {
+    return this._mimeType;
+  }
+
+  /**
+   * Sets the default remote recipient for datagrams sent using this socket.
+   * Used by REMOTE service providers to address a specific entity on the remote node.
+   * @param {*} remoteRecipient - remote recipient identifier (e.g. an AgentID or name string)
+   * @returns {void}
+   */
+  setRemoteRecipient(remoteRecipient) {
+    this._remoteRecipient = remoteRecipient;
+  }
+
+  /**
+   * Gets the default remote recipient for datagrams sent using this socket.
+   * @returns {*} - remote recipient identifier, or null if not set
+   */
+  getRemoteRecipient() {
+    return this._remoteRecipient;
+  }
+
+  /**
+   * Sets the default mailbox name for datagrams sent using this socket.
+   * Mailboxes are used by REMOTE service providers to deliver messages
+   * to a named queue on the remote node.
+   * @param {string} mailbox - mailbox name
+   * @returns {void}
+   */
+  setMailbox(mailbox) {
+    this._mailbox = mailbox;
+  }
+
+  /**
+   * Gets the default mailbox name for datagrams sent using this socket.
+   * @returns {string|null} - mailbox name, or null if not set
+   */
+  getMailbox() {
+    return this._mailbox;
+  }
+
+  /**
+   * Sets the default application message class for datagrams sent using this socket.
+   * Used by REMOTE service providers to associate a fully-qualified class name with the payload.
+   * @param {string} messageClass - fully-qualified message class name (e.g. 'org.example.Status')
+   * @returns {void}
+   */
+  setMessageClass(messageClass) {
+    this._messageClass = messageClass;
+  }
+
+  /**
+   * Gets the default application message class for datagrams sent using this socket.
+   * @returns {string|null} - message class name, or null if not set
+   */
+  getMessageClass() {
+    return this._messageClass;
+  }
+
+  /**
+   * Overrides the service provider used to transmit datagrams. When set, provider
+   * auto-selection is bypassed and all sends go through the specified agent.
+   * Pass null to re-enable auto-selection.
+   * @param {AgentID|string|null} provider - agent id, agent name string, or null to clear the override
+   * @returns {void}
+   */
+  setServiceProvider(provider) {
+    if (typeof provider === 'string') provider = this.agent(provider);
+    this._serviceProvider = provider instanceof AgentID || provider == null ? provider : null;
+  }
+
+  /**
+   * Gets the currently configured service provider override.
+   * @returns {AgentID|null} - the override agent id, or null if auto-selection is active
+   */
+  getServiceProvider() {
+    return this._serviceProvider;
+  }
+
+  /**
+   * Sets the send mode that controls how send() behaves after the provider accepts a request:
+   * - `UnetSocket.NON_BLOCKING` (0): returns immediately after the provider agrees.
+   * - `UnetSocket.SEMI_BLOCKING` (1): if reliability is not true, returns after AGREE; otherwise
+   *   waits for a delivery confirmation (RemoteDeliveryNtf / DatagramDeliveryNtf) or failure.
+   * - `UnetSocket.BLOCKING` (2): waits for a transmission or delivery notification
+   *   (DatagramTransmissionNtf, DatagramDeliveryNtf) before returning.
+   * The default is SEMI_BLOCKING.
+   * @param {number} sendMode - one of UnetSocket.NON_BLOCKING, SEMI_BLOCKING, or BLOCKING
+   * @returns {void}
+   */
+  setSendMode(sendMode) {
+    if ([NON_BLOCKING, SEMI_BLOCKING, BLOCKING].includes(sendMode)) this._sendMode = sendMode;
+  }
+
+  /**
+   * Gets the current send mode.
+   * @returns {number} - current send mode (NON_BLOCKING=0, SEMI_BLOCKING=1, BLOCKING=2)
+   */
+  getSendMode() {
+    return this._sendMode;
+  }
+
+  async _chooseAgentForService(service) {
+    const agents = await this._gw.agentsForService(service);
+    if (agents == null || agents.length === 0) return null;
+    return agents[Math.floor(Math.random() * agents.length)];
+  }
+
+  async _resolveProvider() {
+    if (this._serviceProvider != null) return this._serviceProvider;
+    const serviceOrder = [
+      Services.REMOTE,
+      Services.TRANSPORT,
+      Services.ROUTING,
+      Services.LINK,
+      Services.PHYSICAL,
+      Services.DATAGRAM,
+    ];
+    for (const service of serviceOrder) {
+      const provider = await this._chooseAgentForService(service);
+      if (provider != null) return provider;
+    }
+    return null;
+  }
+
+  _applySocketSettings(req) {
+    if (!hasValue(req.priority) && hasValue(this._priority)) req.priority = this._priority;
+    if (!hasValue(req.reliability) && hasValue(this._reliability)) req.reliability = this._reliability;
+    if ((!hasValue(req.ttl) || Number.isNaN(req.ttl)) && hasFiniteNumber(this._ttl)) req.ttl = this._ttl;
+    if (!hasValue(req.route) && hasValue(this._route)) req.route = this._route;
+    if (!hasValue(req.mimeType) && hasValue(this._mimeType)) req.mimeType = this._mimeType;
+    if (!hasValue(req.remoteRecipient) && hasValue(this._remoteRecipient)) req.remoteRecipient = this._remoteRecipient;
+    if (!hasValue(req.mailbox) && hasValue(this._mailbox)) req.mailbox = this._mailbox;
+    if (!hasValue(req.messageClass) && hasValue(this._messageClass)) req.messageClass = this._messageClass;
+  }
+
+  _effectiveReliability(req) {
+    return hasValue(req.reliability) ? req.reliability : this._reliability;
+  }
+
+  async _waitForNotification(req, types, timeout = REQUEST_TIMEOUT) {
+    return await this._gw.receive(msg => {
+      if (!types.some(type => msg instanceof type)) return false;
+      if (hasValue(msg.inReplyTo) && msg.inReplyTo === req.msgID) return true;
+      return false;
+    }, timeout);
+  }
+
+  async _waitForSemiBlockingOutcome(req) {
+    const notification = await this._waitForNotification(req, [
+      DatagramDeliveryNtf,
+      DatagramFailureNtf,
+      RemoteDeliveryNtf,
+      RemoteSuccessNtf,
+      RemoteFailureNtf,
+    ]);
+    if (notification == null) return false;
+    if (notification instanceof DatagramFailureNtf || notification instanceof RemoteFailureNtf) return false;
+    return true;
+  }
+
+  async _waitForBlockingOutcome(req) {
+    const notification = await this._waitForNotification(req, [
+      DatagramTransmissionNtf,
+      DatagramDeliveryNtf,
+      DatagramFailureNtf,
+      RemoteDeliveryNtf,
+      RemoteSuccessNtf,
+      RemoteFailureNtf,
+    ]);
+    if (notification == null) return false;
+    if (notification instanceof DatagramFailureNtf || notification instanceof RemoteFailureNtf) return false;
+    return true;
+  }
+
+  /**
    * Transmits a datagram to the specified node address using the specified protocol.
    * Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved,
    * and cannot be used for sending datagrams using the socket.
@@ -2323,30 +2617,41 @@ class UnetSocket {
    */
   async send(data, to=this._remoteAddress, protocol=this._remoteProtocol) {
     if (to < 0 || this._gw == null) return false;
-    var req;
-    if (Array.isArray(data)){
+    let req;
+    if (Array.isArray(data)) {
       req = new DatagramReq();
       req.data = data;
       req.to = to;
       req.protocol = protocol;
-    } else if (data instanceof DatagramReq){
+    } else if (data instanceof DatagramReq) {
       req = data;
+      if (!this._warnedDeprecatedSend && typeof console !== 'undefined' && typeof console.warn === 'function') {
+        console.warn('UnetSocket.send(DatagramReq) is deprecated; prefer socket metadata setters with send(data, to, protocol).');
+        this._warnedDeprecatedSend = true;
+      }
     } else {
       return false;
     }
-    let p = req.protocol;
-    if (p != Protocol.DATA && (p < Protocol.USER || p > Protocol.MAX)) return false;
+    if ((!hasValue(req.to) || req.to < 0) && to >= 0) req.to = to;
+    if (!hasValue(req.protocol)) req.protocol = protocol;
+    this._applySocketSettings(req);
+
+    if (!Array.isArray(req.data) || req.to < 0 || isReservedProtocol(req.protocol)) return false;
     if (req.recipient == null) {
-      if (this._provider == null) this._provider = await this._gw.agentForService(Services.TRANSPORT);
-      if (this._provider == null) this._provider = await this._gw.agentForService(Services.ROUTING);
-      if (this._provider == null) this._provider = await this._gw.agentForService(Services.LINK);
-      if (this._provider == null) this._provider = await this._gw.agentForService(Services.PHYSICAL);
-      if (this._provider == null) this._provider = await this._gw.agentForService(Services.DATAGRAM);
-      if (this._provider == null) return false;
-      req.recipient = this._provider;
+      req.recipient = await this._resolveProvider();
+      if (req.recipient == null) return false;
     }
     const rsp = await this._gw.request(req, REQUEST_TIMEOUT);
-    return (rsp != null && rsp.perf == Performative.AGREE);
+    if (rsp == null || rsp.perf != Performative.AGREE) return false;
+
+    if (this._sendMode === NON_BLOCKING) return true;
+
+    if (this._sendMode === SEMI_BLOCKING) {
+      if (this._effectiveReliability(req) !== true) return true;
+      return await this._waitForSemiBlockingOutcome(req);
+    }
+
+    return await this._waitForBlockingOutcome(req);
   }
 
   /**
@@ -2445,5 +2750,9 @@ class UnetSocket {
     delete this._paramChangeCallbacks[agentId + '.' + paramName];
   }
 }
+
+UnetSocket.NON_BLOCKING = NON_BLOCKING;
+UnetSocket.SEMI_BLOCKING = SEMI_BLOCKING;
+UnetSocket.BLOCKING = BLOCKING;
 
 export { AgentID, Gateway, Message, MessageClass, Performative, Protocol, Services, UnetMessages, UnetSocket, UnetTopics, toGps, toLocal };

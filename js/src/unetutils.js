@@ -75,6 +75,7 @@ let UnetMessages = {
   'DatagramNtf'            : MessageClass('org.arl.unet.DatagramNtf'),
   'DatagramProgressNtf'    : MessageClass('org.arl.unet.DatagramProgressNtf'),
   'DatagramReq'            : MessageClass('org.arl.unet.DatagramReq'),
+  'DatagramTransmissionNtf': MessageClass('org.arl.unet.DatagramTransmissionNtf'),
   'ParamChangeNtf'         : MessageClass('org.arl.unet.ParamChangeNtf'),
   'RefuseRsp'              : MessageClass('org.arl.unet.RefuseRsp'),
   'FailureNtf'             : MessageClass('org.arl.unet.FailureNtf'),
@@ -144,6 +145,7 @@ let UnetMessages = {
   'RemoteFileGetReq'       : MessageClass('org.arl.unet.remote.RemoteFileGetReq'),
   'RemoteFileNtf'          : MessageClass('org.arl.unet.remote.RemoteFileNtf'),
   'RemoteFilePutReq'       : MessageClass('org.arl.unet.remote.RemoteFilePutReq'),
+  'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
   'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
   'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf'),
   'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq'),
@@ -206,8 +208,14 @@ function _initConv(lat){
  * @property {number} from - from/source node address
  * @property {number} to - to/destination node address
  * @property {number} protocol - protocol number to be used to send this Datagram
+ * @property {*} priority - priority assigned to the datagram request
  * @property {boolean} reliability - true if Datagram should be reliable, false if unreliable
  * @property {number} ttl - time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+ * @property {*} route - route identifier to use when supported by the provider
+ * @property {string} mimeType - MIME type describing the payload
+ * @property {*} remoteRecipient - recipient identifier used by REMOTE service providers
+ * @property {string} mailbox - mailbox name used by REMOTE service providers
+ * @property {*} messageClass - application message class used by REMOTE service providers
  */
 
 /**

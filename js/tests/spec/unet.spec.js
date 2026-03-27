@@ -1,5 +1,6 @@
 /* global it expect describe AgentID UnetMessages UnetTopics Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine*/
 
+const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
 
 let gwOpts = [];
@@ -137,6 +138,35 @@ describe('A UnetSocket', function () {
     usock.close();
   });
 
+  it('should expose socket-level metadata and send-mode controls', async function() {
+    let usock = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    const phy = await usock.agentForService(Services.PHYSICAL);
+
+    usock.setTTL(42);
+    usock.setPriority('HIGH');
+    usock.setReliability(true);
+    usock.setRoute('route-1');
+    usock.setMimeType('application/octet-stream');
+    usock.setRemoteRecipient('recipient-1');
+    usock.setMailbox('STATUS');
+    usock.setMessageClass('org.example.Status');
+    usock.setServiceProvider(phy);
+    usock.setSendMode(UnetSocket.BLOCKING);
+
+    expect(usock.getTTL()).toBe(42);
+    expect(usock.getPriority()).toBe('HIGH');
+    expect(usock.getReliability()).toBeTrue();
+    expect(usock.getRoute()).toBe('route-1');
+    expect(usock.getMimeType()).toBe('application/octet-stream');
+    expect(usock.getRemoteRecipient()).toBe('recipient-1');
+    expect(usock.getMailbox()).toBe('STATUS');
+    expect(usock.getMessageClass()).toBe('org.example.Status');
+    expect(usock.getServiceProvider()).toBe(phy);
+    expect(usock.getSendMode()).toBe(UnetSocket.BLOCKING);
+
+    usock.close();
+  });
+
   it('should be only able to communicate bound to', async function(){
     let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
     let usock2 = await new UnetSocket(gwOpts[1].hostname, gwOpts[1].port);
@@ -150,6 +180,79 @@ describe('A UnetSocket', function () {
     let ntf = await usock2.receive();                                 // Will receive since sent to correct protocol
     expect(ntf).toBeInstanceOf(DatagramNtf);
     expect(ntf.data).toEqual([7,8,9]);
+
+    usock1.close();
+    usock2.close();
+  });
+
+  it('should apply socket defaults to deprecated DatagramReq sends', async function() {
+    let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    let usock2 = await new UnetSocket(gwOpts[1].hostname, gwOpts[1].port);
+    spyOn(console, 'warn');
+
+    expect(usock2.bind(Protocol.USER)).toBeTrue();
+    usock2.setTimeout(1000);
+
+    usock1.connect(31, Protocol.USER);
+    usock1.setTTL(15);
+    usock1.setReliability(false);
+    usock1.setMimeType('application/test');
+    usock1.setMailbox('STATUS');
+
+    let req = new DatagramReq();
+    req.data = [9, 8, 7];
+
+    expect(await usock1.send(req)).toBeTrue();
+    expect(console.warn).toHaveBeenCalled();
+    expect(req.to).toBe(31);
+    expect(req.protocol).toBe(Protocol.USER);
+    expect(req.ttl).toBe(15);
+    expect(req.reliability).toBeFalse();
+    expect(req.mimeType).toBe('application/test');
+    expect(req.mailbox).toBe('STATUS');
+
+    let ntf = await usock2.receive();
+    expect(ntf).toBeInstanceOf(DatagramNtf);
+    expect(ntf.data).toEqual([9, 8, 7]);
+
+    usock1.close();
+    usock2.close();
+  });
+
+  it('should support reliable semi-blocking sends', async function() {
+    let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    let usock2 = await new UnetSocket(gwOpts[1].hostname, gwOpts[1].port);
+
+    expect(usock2.bind(Protocol.USER)).toBeTrue();
+    usock2.setTimeout(1000);
+
+    usock1.connect(31, Protocol.USER);
+    usock1.setReliability(true);
+    usock1.setSendMode(UnetSocket.SEMI_BLOCKING);
+
+    expect(await usock1.send([3, 1, 4])).toBeTrue();
+    let ntf = await usock2.receive();
+    expect(ntf).toBeInstanceOf(DatagramNtf);
+    expect(ntf.data).toEqual([3, 1, 4]);
+
+    usock1.close();
+    usock2.close();
+  });
+
+  it('should support blocking sends', async function() {
+    let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    let usock2 = await new UnetSocket(gwOpts[1].hostname, gwOpts[1].port);
+
+    expect(usock2.bind(Protocol.USER)).toBeTrue();
+    usock2.setTimeout(1000);
+
+    usock1.connect(31, Protocol.USER);
+    usock1.setSendMode(UnetSocket.BLOCKING);
+
+    expect(await usock1.send([2, 7, 1, 8])).toBeTrue();
+    let ntf = await usock2.receive();
+    expect(ntf).toBeInstanceOf(DatagramNtf);
+    expect(ntf.data).toEqual([2, 7, 1, 8]);
 
     usock1.close();
     usock2.close();
