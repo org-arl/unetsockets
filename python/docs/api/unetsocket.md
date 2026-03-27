@@ -627,7 +627,7 @@ Check if a default destination is set.
 ### onParamChange()
 
 ```python
-onParamChange(agentId: 'Union[AgentID, str]', paramName: 'str', callback: 'Callable[[ParamChangeNtf], None]') -> 'None'
+onParamChange(agentId: 'Union[AgentID, str]', paramName: 'str', callback: 'Callable[[Any], None]') -> 'None'
 ```
 
 Register a callback for parameter change notifications from a specific agent.
@@ -639,7 +639,7 @@ Register a callback for parameter change notifications from a specific agent.
 |-----------|-------------|
 | `agentId` | AgentID or name of the agent to monitor. |
 | `paramName` | Name of the parameter to watch for changes. |
-| `callback` | Function to call with the ParamChangeNtf when the parameter changes. |
+| `callback` | Function to call with the new parameter value when a change is detected. |
 
 **Example:**
 
@@ -728,9 +728,8 @@ message class, remote recipient, and mailbox automatically promote the
 outgoing request to a RemoteMessageReq.
 
 If no service provider is set explicitly, plain datagrams are routed using
-the normal UnetStack stack in order of preference: TRANSPORT, ROUTING,
-LINK, PHYSICAL, DATAGRAM. RemoteMessageReq traffic prefers REMOTE when
-available.
+the normal UnetStack stack in order of preference: REMOTE, TRANSPORT, ROUTING,
+LINK, PHYSICAL, DATAGRAM.
 
 Send behavior depends on sendMode. NON_BLOCKING returns after handing the
 request to the gateway. SEMI_BLOCKING waits for AGREE, and if reliability

@@ -572,9 +572,9 @@ class UnetSocket:
             provider: Provider agent, or None to restore automatic selection.
 
         When provider is None, UnetSocket reverts to automatic provider selection.
-        Automatic selection prefers Services.REMOTE for RemoteMessageReq traffic,
-        and otherwise walks down Services.TRANSPORT, Services.ROUTING,
-        Services.LINK, Services.PHYSICAL, and Services.DATAGRAM.
+        Automatic selection prefers Services.REMOTE otherwise walks
+        down Services.TRANSPORT, Services.ROUTING, Services.LINK,
+        Services.PHYSICAL, and Services.DATAGRAM.
         """
         self.provider = provider
 
@@ -593,9 +593,8 @@ class UnetSocket:
         outgoing request to a RemoteMessageReq.
 
         If no service provider is set explicitly, plain datagrams are routed using
-        the normal UnetStack stack in order of preference: TRANSPORT, ROUTING,
-        LINK, PHYSICAL, DATAGRAM. RemoteMessageReq traffic prefers REMOTE when
-        available.
+        the normal UnetStack stack in order of preference: REMOTE, TRANSPORT, ROUTING,
+        LINK, PHYSICAL, DATAGRAM.
 
         Send behavior depends on sendMode. NON_BLOCKING returns after handing the
         request to the gateway. SEMI_BLOCKING waits for AGREE, and if reliability
