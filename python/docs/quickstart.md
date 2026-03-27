@@ -185,6 +185,18 @@ with UnetSocket("localhost", 1100) as sock:
     print(f"Node B address: {addr_b}")
 ```
 
+## Parameter Change Notifications
+
+```python
+from unetpy import UnetSocket, Services
+
+with UnetSocket("localhost", 1100) as sock:
+    # Subscribe to parameter changes
+    node = sock.agentForService(Services.NODE)
+    sock.onParameterChange(node, "address", lambda new_value: print(f"Node address changed to {new_value}"))
+```
+
+
 ## Coordinate Conversions
 
 Convert between local (meters) and GPS coordinates:

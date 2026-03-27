@@ -624,6 +624,34 @@ Check if a default destination is set.
 
 ---
 
+### onParamChange()
+
+```python
+onParamChange(agentId: 'Union[AgentID, str]', paramName: 'str', callback: 'Callable[[ParamChangeNtf], None]') -> 'None'
+```
+
+Register a callback for parameter change notifications from a specific agent.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `agentId` | AgentID or name of the agent to monitor. |
+| `paramName` | Name of the parameter to watch for changes. |
+| `callback` | Function to call with the ParamChangeNtf when the parameter changes. |
+
+**Example:**
+
+```python
+    >>> def on_address_change(ntf):
+    ...     print(f"Address changed: {ntf.paramValues['address']}")
+    ...
+    >>> sock.onParamChange("node", "address", on_address_change)
+```
+
+---
+
 ### receive()
 
 ```python
@@ -658,6 +686,30 @@ There is currently no way to cancel a blocking receive.
     >>> ntf = sock.receive()
     >>> if ntf:
     ...     print(f"From: {ntf.from_}, Data: {ntf.data}")
+```
+
+---
+
+### removeParamChangeCallback()
+
+```python
+removeParamChangeCallback(agentId: 'Union[AgentID, str]', paramName: 'str') -> 'None'
+```
+
+Remove a previously registered parameter change callback.
+
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `agentId` | AgentID or name of the agent. |
+| `paramName` | Name of the parameter. |
+
+**Example:**
+
+```python
+    >>> sock.removeParamChangeCallback("node", "address")
 ```
 
 ---

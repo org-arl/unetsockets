@@ -223,7 +223,6 @@ class TestUnetSocketTimeout:
             assert result is None
             assert dt <= 500
 
-
 class TestUnetSocketSendOptions:
     """Tests for socket-level send metadata and send mode."""
 
@@ -525,3 +524,31 @@ class TestUnetSocketCommunication:
                 assert sock1.send(payload, addr2, Protocol.USER)
                 _assert_received_payload(sock2, payload)
 
+class TestUnetSocketParamChange:
+    """Tests for dynamic parameter change handling."""
+
+    def test_parameter_change_during_send(self):
+        """Changing node.address should cause the socket.localAddress to update after a short delay."""
+        with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
+            initial_addr = sock.getLocalAddress()
+            assert initial_addr == NODE_A_ADDRESS
+
+            node_agent = sock.agent("node")
+            assert node_agent is not None
+            assert node_agent.address == initial_addr
+
+            # Simulate parameter change by directly modifying the agent's address
+            new_address = 9
+            node_agent.address = new_address
+
+            time.sleep(0.3)
+
+            # Check if the socket's local address has updated to reflect the change
+            assert sock.localAddress == new_address
+
+            # change back to original for cleanliness
+            node_agent.address = initial_addr
+
+            time.sleep(0.3)
+
+            assert sock.localAddress == initial_addr

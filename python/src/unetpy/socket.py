@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from math import isnan
 from threading import Thread
-from typing import Iterable, Optional, Sequence, Union, Callable
+from typing import Any, Iterable, Optional, Sequence, Union, Callable
 
 from fjagepy import AgentID, Gateway, Message, Performative
 from .constants import Protocol, Services, Topics, Address, Priority, Robustness
@@ -97,14 +97,22 @@ class UnetSocket:
         self.messageClass : Optional[str]  = None;
         self.remoteRecipient : Optional[str] = None;
         self.mailbox : Optional[str] = None;
+        self._param_change_callbacks: dict[str, Callable[[Any], None]] = {}
         self._subscribe_datagrams()
 
-        # subscribe to paramchange for local address
+        nodeinfo = self.gw.agentForService(Services.NODE_INFO)
+
+        # subscribe to paramchange notifications for onParamChange callbacks
         self.gw.subscribe(self.gw.topic(Topics.PARAMCHANGE))
-        # create a background thread which does a BLOCKING receive to update the local address when it changes
-        self._param_checker_thread = Thread(target=self._update_local_address, daemon=True)
-        self._param_checker_thread.start()
-        self.localAddress = self.getLocalAddress();
+        if nodeinfo is not None:
+            self.gw.subscribe(self.gw.topic(nodeinfo))
+        self._param_change_thread = Thread(target=self._param_change_handler, daemon=True)
+        self._param_change_thread.start()
+
+        # subscribe to paramchange for local address
+        if nodeinfo.address is not None:
+            self.onParamChange("node", "address", self._update_local_address)
+            self.localAddress = nodeinfo.address
 
     def __enter__(self) -> "UnetSocket":
         return self
@@ -112,19 +120,27 @@ class UnetSocket:
     def __exit__(self, exc_type, exc, tb) -> None:
         self.close()
 
+    def _update_local_address(self, new_address: int) -> None:
+        logger.debug(f"Local address changed to {new_address}")
+        self.localAddress = new_address
 
-    def _update_local_address(self) -> None:
-        while getattr(self, "_param_checker_thread_running", True):
+    def _param_change_handler(self) -> None:
+        while True:
+            if self.gw is None:
+                break
             try:
-                # check if the ParamChangeNtf has a dict called paramValues with a key "address" and if so update the local address
-                ntf = self.gw.receive(lambda msg: isinstance(msg, ParamChangeNtf) and msg.sender == AgentID("node") and hasattr(msg, "paramValues") and isinstance(msg.paramValues, dict) and "address" in msg.paramValues, timeout=1000)
-                if ntf is not None and hasattr(ntf, "paramValues") and isinstance(ntf.paramValues, dict) and "address" in ntf.paramValues:
-                    new_address = ntf.paramValues["address"]
-                    if isinstance(new_address, int):
-                        logger.info(f"Local address updated to {new_address}")
-                        self.localAddress = new_address
+                ntf = self.gw.receive(lambda msg: isinstance(msg, ParamChangeNtf), Gateway.BLOCKING)
+                logger.debug(f"Received parameter change notification: {ntf}")
+                if ntf is not None and ntf.paramValues is not None:
+                    sender = isinstance(ntf.sender, AgentID) and ntf.sender.get_name() or str(ntf.sender)
+                    for param, value in ntf.paramValues.items():
+                        pname = param.split(".")[-1] if "." in param else param
+                        callback = self._param_change_callbacks.get("{}:{}".format(sender, pname), None)
+                        if callback is not None:
+                            logger.debug(f"Invoking parameter change callback for {"{}:{}".format(sender, pname)} with value {value}")
+                            callback(value)
             except Exception as e:
-                logger.error("Error in local address update thread", exc_info=True)
+                logger.error("Error in parameter change listener thread", exc_info=True)
                 break
 
     def _subscribe_datagrams(self) -> None:
@@ -151,9 +167,6 @@ class UnetSocket:
             >>> sock.isClosed()
             True
         """
-        if self._param_checker_thread is not None and self._param_checker_thread.is_alive():
-            self._param_checker_thread_running = False
-            self._param_checker_thread.join(timeout=1)
         if self.gw is None:
             return
         self.gw.close()
@@ -785,6 +798,55 @@ class UnetSocket:
             logger.error(f"Address resolution request timed out for node '{nodeName}'")
             return None
         return rsp.address
+
+    def onParamChange(self, agentId: Union[AgentID, str], paramName:str, callback: Callable[[ParamChangeNtf], None]) -> None:
+        """Register a callback for parameter change notifications from a specific agent.
+
+        Args:
+            agentId: AgentID or name of the agent to monitor.
+            paramName: Name of the parameter to watch for changes.
+            callback: Function to call with the ParamChangeNtf when the parameter changes.
+
+        Example:
+            >>> def on_address_change(ntf):
+            ...     print(f"Address changed: {ntf.paramValues['address']}")
+            ...
+            >>> sock.onParamChange("node", "address", on_address_change)
+        """
+        if self.gw is None:
+            logger.error("Cannot register parameter change callback: socket is closed.")
+            return
+        if isinstance(agentId, AgentID):
+            agent = agentId.get_name()
+        else:
+            agent = agentId
+
+        self._param_change_callbacks["{}:{}".format(agent, paramName)] = callback
+
+    def removeParamChangeCallback(self, agentId: Union[AgentID, str], paramName:str) -> None:
+        """Remove a previously registered parameter change callback.
+
+        Args:
+            agentId: AgentID or name of the agent.
+            paramName: Name of the parameter.
+
+        Example:
+            >>> sock.removeParamChangeCallback("node", "address")
+        """
+        if self.gw is None:
+            logger.error("Cannot remove parameter change callback: socket is closed.")
+            return
+        if isinstance(agentId, AgentID):
+            agent = agentId.get_name()
+        else:
+            agent = agentId
+
+        key = "{}:{}".format(agent, paramName)
+        if key in self._param_change_callbacks:
+            del self._param_change_callbacks[key]
+        else:
+            logger.warning(f"No parameter change callback found for agent '{agent}' and parameter '{paramName}'")
+
 
 ## Internal helper methods
 
