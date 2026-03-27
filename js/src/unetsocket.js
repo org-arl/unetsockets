@@ -510,7 +510,7 @@ export default class UnetSocket {
    * @returns {Promise<boolean>} - true if the Unet node agreed to send out the Datagram, false otherwise
    */
   async send(data, to=this._remoteAddress, protocol=this._remoteProtocol) {
-    if (to < 0 || this._gw == null) return false;
+    if (this._gw == null) return false;
     let req;
     if (Array.isArray(data)) {
       req = new DatagramReq();
