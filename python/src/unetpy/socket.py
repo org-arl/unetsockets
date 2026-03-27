@@ -135,9 +135,10 @@ class UnetSocket:
                     sender = isinstance(ntf.sender, AgentID) and ntf.sender.get_name() or str(ntf.sender)
                     for param, value in ntf.paramValues.items():
                         pname = param.split(".")[-1] if "." in param else param
-                        callback = self._param_change_callbacks.get("{}:{}".format(sender, pname), None)
+                        key = f"{sender}:{pname}"
+                        callback = self._param_change_callbacks.get(key, None)
                         if callback is not None:
-                            logger.debug(f"Invoking parameter change callback for {"{}:{}".format(sender, pname)} with value {value}")
+                            logger.debug(f"Invoking parameter change callback for {key} with value {value}")
                             callback(value)
             except Exception as e:
                 logger.error("Error in parameter change listener thread", exc_info=True)
