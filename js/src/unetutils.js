@@ -145,7 +145,7 @@ let UnetMessages = {
   'RemoteFileGetReq'       : MessageClass('org.arl.unet.remote.RemoteFileGetReq'),
   'RemoteFileNtf'          : MessageClass('org.arl.unet.remote.RemoteFileNtf'),
   'RemoteFilePutReq'       : MessageClass('org.arl.unet.remote.RemoteFilePutReq'),
-  'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
+  'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteDeliveryNtf'),
   'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
   'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf'),
   'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq'),
