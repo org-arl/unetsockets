@@ -28,10 +28,10 @@
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
 
-        const usock= await new UnetSocket('localhost', PORT);  
+        const usock= await new UnetSocket('localhost', PORT);
         (async () => {
             let raddr = await usock.host(REMOTE);
-            usock.connect(raddr, Protocol.USER); 
+            usock.connect(raddr, Protocol.USER);
             usock.bind(Protocol.USER);
             usock.setTimeout(1000);
         })();

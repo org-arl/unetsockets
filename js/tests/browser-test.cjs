@@ -9,7 +9,7 @@ const port = 8000;
 let server = null;
 
 // Setup static web server for testing browser version
-console.log('Setting up local static server at http://'+ip+':'+port+'/tests');
+console.log('\nSetting up local static server at http://'+ip+':'+port+'/tests');
 const file = new statik.Server('.');
 server = require('http').createServer(function (request, response) {
   request.addListener('end', function () {
@@ -41,14 +41,47 @@ if (process.argv.includes('-m')) {
     });
     await page.goto(`http://${ip}:${port}/tests`, {waitUntil: 'networkidle'});
     await page.waitForSelector('.jasmine-overall-result', {timeout: 60000});
+    // Check how many tests passed and failed and print the results
+    // Get the test seed, and print how many tests passed and failed
+    const seed = await page.evaluate(() => {
+      const seedElement = document.querySelector('.jasmine-seed-bar').children[0];
+      return seedElement ? seedElement.textContent : 'N/A';
+    });
+    const results = await page.evaluate(() => {
+      const summary = document.querySelector('.jasmine-symbol-summary');
+      const passed = summary.querySelectorAll('.jasmine-passed').length;
+      const failed = summary.querySelectorAll('.jasmine-failed').length;
+      return { passed, failed };
+    });
+    if (results.failed > 0) {
+      const failedTests = await page.evaluate(() => {
+        const failedTestElements = document.querySelectorAll('.jasmine-failed');
+        const failedTestNames = [];
+        failedTestElements.forEach(el => {
+          const testDescription = el.querySelector('.jasmine-description')
+          if (testDescription) {
+            const testName = Array.from(testDescription.querySelectorAll('a')).map(a => a.textContent).join(' > ');
+            failedTestNames.push(testName);
+          }
+        });
+        return failedTestNames;
+      });
+      console.log('Failed Tests:');
+      if (failedTests) failedTests.forEach(testName => console.log(`- ${testName}`));
+    }
+    console.log(`Test Seed: ${seed}`);
+    console.log(`Passed: ${results.passed}, Failed: ${results.failed}`);
+
     await page.waitForTimeout(1000);
     await browser.close();
     console.log(`Browser test Complete [${new Date() - startTime} ms]`);
 
-    // If running in automatic mode, close the server and exit
     if(server) server.close();
-    console.log('Run Tests Complete!');
-    process.exit(0);
+    if (results.failed > 0) {
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
   })();
 }
 

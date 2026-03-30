@@ -1917,7 +1917,7 @@
   const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf$1);
   const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
 
-  let UnetTopics = {
+  const UnetTopics = {
       'PARAMCHANGE' : 'org.arl.unet.Topics.PARAMCHANGE',  // Topic for parameter change notification.
       'LIFECYCLE' : 'org.arl.unet.Topics.LIFECYCLE',      // Topic for agent lifecycle notification.
       'DATAGRAM' : 'org.arl.unet.Topics.DATAGRAM',        // Topic for incoming datagram notification.
@@ -2056,7 +2056,7 @@
     'RemoteFileGetReq'       : MessageClass('org.arl.unet.remote.RemoteFileGetReq'),
     'RemoteFileNtf'          : MessageClass('org.arl.unet.remote.RemoteFileNtf'),
     'RemoteFilePutReq'       : MessageClass('org.arl.unet.remote.RemoteFilePutReq'),
-    'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
+    'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteDeliveryNtf'),
     'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
     'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf'),
     'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq'),

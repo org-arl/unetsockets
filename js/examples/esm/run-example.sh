@@ -2,11 +2,11 @@
 
 # Downloads and sets up UnetStack, runs the example simulated Unet
 
-UNET_URL=https://unetstack.net/downloads/unet-community-3.1.0.tgz
-TEST_SCRIPT=2-node-des.groovy 
+UNET_URL=https://unetstack.net/downloads/unet-community-6.2.0.tgz
+TEST_SCRIPT=2-node-des.groovy
 
 
-if [ -z "$(ls -d unet-*)" ]; then 
+if [ -z "$(ls -d unet-*)" ]; then
     wget "$UNET_URL"
     tar -xvzf unet-*.tgz
     rm unet-*.tgz
