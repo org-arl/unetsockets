@@ -1,4 +1,6 @@
-unetpy/__pycache__
-build
-dist
-*.egg-info/
+**/__pycache__
+build/**
+dist/**
+.pytest_cache/
+.coverage
+src/*.egg-info/**
