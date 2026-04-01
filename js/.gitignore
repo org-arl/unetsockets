@@ -2,3 +2,4 @@ node_modules
 tests/unet
 tests/spec/unetSpec.cjs
 tests/spec/unetSpec.mjs
+dist/

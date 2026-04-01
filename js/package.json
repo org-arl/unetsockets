@@ -1,6 +1,6 @@
 {
   "name": "unetjs",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "description": "JavaScript Helper Library for UnetStack",
   "main": "./dist/cjs/unet.cjs",
   "exports": {
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/org-arl/unet-contrib.git"
+    "url": "git+https://github.com/org-arl/unetsockets.git"
   },
   "keywords": [
     "underwater",
@@ -33,15 +33,15 @@
   "author": "\"Chinmay Pendharkar (http://chinpen.net)",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/org-arl/unet-contrib/issues"
+    "url": "https://github.com/org-arl/unetsockets/issues"
   },
-  "homepage": "https://github.com/org-arl/unet-contrib#readme",
+  "homepage": "https://github.com/org-arl/unetsockets#readme",
   "dependencies": {
     "fjage": "2.3.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "9.39.4",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "browser-or-node": "^3.0.0",
@@ -50,7 +50,7 @@
     "globals": "^16.5.0",
     "jasmine": "^5.13.0",
     "node-static": "^0.7.11",
-    "puppeteer": "^24.40.0",
+    "playwright": "^1.58.2",
     "rollup": "^4.60.0"
   }
 }
