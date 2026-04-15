@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unetpy"
-version = "4.0.0"
+version = "4.0.1"
 description = "UnetSocket: A high-level socket interface for UnetStack in Python"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
