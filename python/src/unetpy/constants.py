@@ -21,6 +21,7 @@ __all__ = [
     "Address",
     "Priority",
     "Robustness",
+    "RouteInfo"
 ]
 
 
@@ -154,19 +155,19 @@ class ReservationStatus:
     during the MAC reservation process.
     """
 
-    START = 0
+    START = "START"
     """Start of channel reservation."""
 
-    END = 1
+    END = "END"
     """End of channel reservation."""
 
-    FAILURE = 2
+    FAILURE = "FAILURE"
     """Failed to reserve channel."""
 
-    CANCEL = 3
+    CANCEL = "CANCEL"
     """Reservation cancelled."""
 
-    REQUEST = 4
+    REQUEST = "REQUEST"
     """Request for information from client agent."""
 
 
@@ -188,19 +189,19 @@ class Priority:
     delivery in the UnetStack network.
     """
 
-    URGENT = 1
+    URGENT = "URGENT"
     """Urgent priority. Deliver as soon as possible, taking priority over all other traffic, even if that leads to starvation of other traffic."""
 
-    HIGH = 2
+    HIGH = "HIGH"
     """High priority. Deliver at better QoS than NORMAL, but avoiding starvation of other traffic when possible."""
 
-    NORMAL = 3
+    NORMAL = "NORMAL"
     """Normal priority. Deliver at better QoS than LOW, but avoiding starvation of other traffic when possible."""
 
-    LOW = 4
+    LOW = "LOW"
     """Low priority. Deliver at lower QoS than NORMAL, but still avoiding being completely starved by NORMAL or HIGH priority traffic."""
 
-    IDLE = 5
+    IDLE = "IDLE"
     """Idle priority. Deliver only when there is no other traffic."""
 
 
@@ -209,8 +210,23 @@ class Robustness:
 
     """
 
-    ROBUST = 1
+    ROBUST = "ROBUST"
     """Robust delivery. Attempt to delivery Datagram with higher probability of success, potentially take longer"""
 
-    NORMAL = 2
+    NORMAL = "NORMAL"
     """Normal delivery. Attempt to deliver Datagram with normal probability of success and time."""
+
+class RouteInfo:
+    """Route information for routing agents."""
+
+    class Operation:
+        """Route operation types."""
+
+        CREATE = "CREATE"
+        """Create a new route."""
+
+        CHANGE = "CHANGE"
+        """Change an existing route."""
+
+        DELETE = "DELETE"
+        """Delete an existing route."""
