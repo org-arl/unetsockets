@@ -1,8 +1,11 @@
-docs:
-	python docs/generate_api_docs.py
-
 build: docs
 	PIP_USER=0 python3 -m build
+
+docs: lint
+	python docs/generate_api_docs.py
+
+lint:
+	mypy src/unetpy
 
 testupload: build
 	twine upload --repository testpypi dist/*
@@ -10,7 +13,7 @@ testupload: build
 upload: build
 	twine upload --repository pypi dist/*
 
-test:
+test: lint
 	pytest tests/
 
 clean:

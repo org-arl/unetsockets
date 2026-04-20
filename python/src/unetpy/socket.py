@@ -411,7 +411,7 @@ class UnetSocket:
         """Alias for setTtl()."""
         self.setTtl(ttl)
 
-    def getPriority(self) -> int:
+    def getPriority(self) -> str:
         """Get the priority level for outgoing datagrams.
 
         Returns:
@@ -419,7 +419,7 @@ class UnetSocket:
         """
         return self.priority
 
-    def setPriority(self, priority: int) -> None:
+    def setPriority(self, priority: str) -> None:
         """Set the priority level for outgoing datagrams.
 
         Args:
@@ -428,12 +428,12 @@ class UnetSocket:
         Example:
             >>> sock.setPriority(Priority.HIGH)
         """
-        if priority < Priority.URGENT or priority > Priority.IDLE:
-            logger.error(f"Invalid priority level {priority}. Must be between {Priority.URGENT} and {Priority.IDLE}.")
+        if priority not in Priority.__dict__.values():
+            logger.error(f"Invalid priority level {priority}. Must be one of {list(Priority.__dict__.values())}.")
             return
         self.priority = priority
 
-    def getRobustness(self) -> int:
+    def getRobustness(self) -> str:
         """Get the robustness level for outgoing datagrams.
 
         Returns:
@@ -441,7 +441,7 @@ class UnetSocket:
         """
         return self.robustness
 
-    def setRobustness(self, robustness: int) -> None:
+    def setRobustness(self, robustness: str) -> None:
         """Set the robustness level for outgoing datagrams.
 
         Args:
@@ -449,11 +449,8 @@ class UnetSocket:
         Example:
             >>> sock.setRobustness(Robustness.ROBUST)
         """
-        if robustness < Robustness.ROBUST or robustness > Robustness.NORMAL:
-            logger.error(
-                f"Invalid robustness level {robustness}. Must be between "
-                f"{Robustness.ROBUST} and {Robustness.NORMAL}."
-            )
+        if robustness not in Robustness.__dict__.values():
+            logger.error(f"Invalid robustness level {robustness}. Must be one of {list(Robustness.__dict__.values())}.")
             return
         self.robustness = robustness
 

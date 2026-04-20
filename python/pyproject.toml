@@ -20,6 +20,7 @@ dev = [
     "build",
     "pytest>=8",
     "twine",
+    "mypy==1.19.0",
 ]
 
 [project.urls]
@@ -40,3 +41,6 @@ minversion = "8.0"
 addopts = "-ra"
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.mypy]
+check_untyped_defs = true
