@@ -14,7 +14,7 @@ upload: build
 	twine upload --repository pypi dist/*
 
 test: lint
-	pytest tests/
+	pytest -vv tests/
 
 clean:
 	rm -rf build/ dist/ unetpy.egg-info/ python/docs/api/
