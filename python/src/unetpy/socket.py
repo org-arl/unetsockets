@@ -83,6 +83,22 @@ class UnetSocket:
     Not a valid timeout value for receive().
     """
 
+    sendMode: int
+    localProtocol: int
+    remoteAddress: int
+    remoteProtocol: int
+    timeout: int
+    provider: Optional[AgentID]
+    ttl: float
+    priority: Priority
+    robustness: Robustness
+    reliability: Optional[bool]
+    route: Optional[str]
+    mimeType: Optional[str]
+    messageClass: Optional[str]
+    remoteRecipient: Optional[str]
+    mailbox: Optional[str]
+
     def __init__(
         self,
         hostname: str,
@@ -106,16 +122,16 @@ class UnetSocket:
         self.remoteAddress = -1
         self.remoteProtocol = Protocol.DATA
         self.timeout = UnetSocket.BLOCKING
-        self.provider: Optional[AgentID] = None
+        self.provider = None
         self.ttl = float('nan')
         self.priority = Priority.NORMAL;
         self.robustness = Robustness.NORMAL;
         self.reliability : Optional[bool] = None;
-        self.route : Optional[str] = None;
-        self.mimeType : Optional[str]  = None;
-        self.messageClass : Optional[str]  = None;
-        self.remoteRecipient : Optional[str] = None;
-        self.mailbox : Optional[str] = None;
+        self.route = None;
+        self.mimeType = None;
+        self.messageClass = None;
+        self.remoteRecipient = None;
+        self.mailbox = None;
         self._param_change_callbacks: dict[str, Callable[[Any], None]] = {}
         self._subscribe_datagrams()
 

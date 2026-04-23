@@ -88,7 +88,7 @@ class Services(_Services):
     """Sleep scheduler service."""
 
 
-class Topics:
+class Topics(str, Enum):
     """Topics for pub/sub notifications.
 
     These topics can be subscribed to for receiving notifications about
@@ -108,7 +108,7 @@ class Topics:
     """Topic for incoming datagram notification."""
 
 
-class Protocol:
+class Protocol(int, Enum):
     """Well-known protocol number assignments.
 
     Protocol numbers identify the type of data in a datagram. Numbers 1-31
@@ -173,7 +173,7 @@ class ReservationStatus(str, Enum):
     """Request for information from client agent."""
 
 
-class Address:
+class Address(int, Enum):
     """Special address constants.
 
     Example:
