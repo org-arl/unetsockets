@@ -824,13 +824,14 @@ class UnetSocket:
             >>> sock.host("B")
             31
         """
-        assert self.gw is not None, "Cannot resolve host: socket is closed."
+        if self.gw is None:
+            logger.error("Cannot resolve host: socket is closed.")
+            return None
 
         arp = self.agentForService(Services.ADDRESS_RESOLUTION)
         if arp is None:
             logger.error("No ADDRESS_RESOLUTION service provider found.")
             return None
-        # Safety: `agentForService()` already checks that `self.gw` is not `None`.
 
         req = AddressResolutionReq()
         req.name = nodeName
