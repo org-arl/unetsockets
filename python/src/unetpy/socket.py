@@ -702,7 +702,9 @@ class UnetSocket:
         try:
             return self.gw.receive(_createMatcher(self.localAddress, self.localProtocol), effective_timeout)
         except Exception as e:
-            logger.error(f"Failed to receive datagram", exc_info=True)
+except Exception:
+    logger.error(f"Failed to receive datagram", exc_info=True)
+    return None
 
     def getGateway(self) -> Optional[Gateway]:
         """Get the underlying fjåge Gateway for low-level access.
