@@ -5,7 +5,7 @@ docs: lint
 	python docs/generate_api_docs.py
 
 lint:
-	mypy src/unetpy
+	python3 -m mypy src/unetpy
 
 testupload: build
 	twine upload --repository testpypi dist/*
