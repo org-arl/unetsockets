@@ -786,7 +786,12 @@ class UnetSocket:
         arp = self.agentForService(Services.ADDRESS_RESOLUTION)
         if arp is None:
             logger.error("No ADDRESS_RESOLUTION service provider found.")
-            return None
+arp = self.agentForService(Services.ADDRESS_RESOLUTION)
+if arp is None:
+    logger.error("No ADDRESS_RESOLUTION service provider found.")
+    return None
+# Safety: `agentForService()` already checks that `self.gw` is not `None`.
+assert self.gw is not None
         req = AddressResolutionReq()
         req.name = nodeName
         req.recipient = arp
