@@ -81,7 +81,7 @@ class UnetSocket:
             232
             >>> sock.close()
         """
-        self.gw = Gateway(hostname, port)
+        self.gw: Optional[Gateway] = Gateway(hostname, port)
         self.sendMode = Gateway.SEMI_BLOCKING
         self.localProtocol = -1
         self.remoteAddress = -1
