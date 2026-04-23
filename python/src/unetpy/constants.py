@@ -11,6 +11,8 @@ Example:
 
 from __future__ import annotations
 
+from enum import Enum
+
 from fjagepy import Services as _Services
 
 __all__ = [
@@ -148,7 +150,7 @@ class Protocol:
     """Maximum protocol number (63)."""
 
 
-class ReservationStatus:
+class ReservationStatus(str, Enum):
     """Status indicators for MAC channel reservation.
 
     These values indicate the status of a channel reservation request
@@ -182,7 +184,7 @@ class Address:
     """Broadcast address (0) - sends to all nodes in the network."""
 
 
-class Priority:
+class Priority(str, Enum):
     """Priority levels for message delivery.
 
     These priority levels determine the quality of service for message
@@ -205,7 +207,7 @@ class Priority:
     """Idle priority. Deliver only when there is no other traffic."""
 
 
-class Robustness:
+class Robustness(str, Enum):
     """Robustness of transmission.
 
     """
@@ -219,7 +221,7 @@ class Robustness:
 class RouteInfo:
     """Route information for routing agents."""
 
-    class Operation:
+    class Operation(str, Enum):
         """Route operation types."""
 
         CREATE = "CREATE"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+from enum import Enum
 
 import pytest
 
@@ -13,6 +14,8 @@ from unetpy import (
     Performative,
     Protocol,
     RemoteMessageReq,
+    ReservationStatus,
+    RouteInfo,
     Services,
     UnetSocket,
     Priority,
@@ -223,7 +226,7 @@ class TestUnetSocketSendOptions:
     def test_send_option_defaults(self):
         """UnetSocket should expose the documented default send options."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            assert sock.getSendMode() == Gateway.SEMI_BLOCKING
+            assert sock.getSendMode() == UnetSocket.SEMI_BLOCKING
             assert math.isnan(sock.getTtl())
             assert sock.getPriority() == Priority.NORMAL
             assert sock.getRobustness() == Robustness.NORMAL
@@ -236,7 +239,7 @@ class TestUnetSocketSendOptions:
     def test_send_option_accessors_round_trip(self):
         """Configured send metadata should round-trip through the socket accessors."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            sock.setSendMode(Gateway.BLOCKING)
+            sock.setSendMode(UnetSocket.BLOCKING)
             sock.setTTL(42.5)
             sock.setPriority(Priority.HIGH)
             sock.setRobustness(Robustness.ROBUST)
@@ -247,7 +250,7 @@ class TestUnetSocketSendOptions:
             sock.setRemoteRecipient("node")
             sock.setMailbox("STATUS")
 
-            assert sock.getSendMode() == Gateway.BLOCKING
+            assert sock.getSendMode() == UnetSocket.BLOCKING
             assert sock.getTTL() == 42.5
             assert sock.getPriority() == Priority.HIGH
             assert sock.getRobustness() == Robustness.ROBUST
@@ -259,7 +262,7 @@ class TestUnetSocketSendOptions:
             assert sock.getMailbox() == "STATUS"
 
             sock.setSendMode(99)
-            assert sock.getSendMode() == Gateway.BLOCKING
+            assert sock.getSendMode() == UnetSocket.BLOCKING
 
     def test_socket_metadata_is_applied_to_datagram_requests(self):
         """Socket-level metadata should be copied into outgoing datagram requests."""
@@ -338,7 +341,7 @@ class TestUnetSocketJavaParity:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
             sock.connect(NODE_B_ADDRESS, Protocol.USER)
             sock.setReliability(True)
-            sock.setSendMode(Gateway.SEMI_BLOCKING)
+            sock.setSendMode(UnetSocket.SEMI_BLOCKING)
 
             class _Agree:
                 perf = Performative.AGREE
@@ -375,6 +378,22 @@ class TestUnetSocketJavaParity:
             sock.setRobustness(Robustness.ROBUST)
             sock.setRobustness(Robustness.NORMAL)
             assert sock.getRobustness() == Robustness.NORMAL
+
+
+class TestEnumConstants:
+    """Tests for enum-backed constant groups."""
+
+    def test_selected_constant_groups_are_string_backed_enums(self):
+        """Selected constant groups should be enums while remaining string-compatible."""
+        assert issubclass(Priority, Enum)
+        assert issubclass(Robustness, Enum)
+        assert issubclass(ReservationStatus, Enum)
+        assert issubclass(RouteInfo.Operation, Enum)
+
+        assert Priority.HIGH == "HIGH"
+        assert Robustness.ROBUST == "ROBUST"
+        assert ReservationStatus.REQUEST == "REQUEST"
+        assert RouteInfo.Operation.CREATE == "CREATE"
 
 class TestUnetSocketCommunication:
     """Tests for datagram communication between nodes."""
