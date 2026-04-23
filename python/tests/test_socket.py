@@ -184,7 +184,6 @@ def _receive_datagram(sock, attempts=3, delay_s=0.5):
 def _assert_received_payload(sock, payload):
     """Assert that the socket receives a datagram with the expected payload."""
     ntf = _receive_datagram(sock)
-    print(f"Received notification: {ntf}")
     assert isinstance(ntf, DatagramNtf)
     assert ntf.data == payload
 
