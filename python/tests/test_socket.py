@@ -399,7 +399,7 @@ class TestUnetSocketCommunication:
 
     @pytest.fixture(autouse=True)
     def run_between_tests(self):
-        """Drain pending messages and reset timeout before each test."""
+        """Drain pending messages before each test."""
         with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
             _drain_pending_messages(sock2)
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:

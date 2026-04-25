@@ -463,10 +463,11 @@ class UnetSocket:
         Example:
             >>> sock.setPriority(Priority.HIGH)
         """
-        if priority not in Priority._value2member_map_:
+        values = [p.value for p in Priority]
+        if priority not in values:
             logger.error(
                 f"Invalid priority level {priority}. Must be one of "
-                f"{list(Priority._value2member_map_)}."
+                f"{list(values)}."
             )
             return
         self.priority = Priority(priority)
@@ -487,10 +488,11 @@ class UnetSocket:
         Example:
             >>> sock.setRobustness(Robustness.ROBUST)
         """
-        if robustness not in Robustness._value2member_map_:
+        values = [r.value for r in Robustness]
+        if robustness not in values:
             logger.error(
                 f"Invalid robustness level {robustness}. Must be one of "
-                f"{list(Robustness._value2member_map_)}."
+                f"{list(values)}."
             )
             return
         self.robustness = Robustness(robustness)
