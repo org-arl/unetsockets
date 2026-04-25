@@ -37,17 +37,17 @@ Protocol.DATA (0) or Protocol.USER (32) through Protocol.MAX (63).
 
 | Constant | Value |
 |----------|-------|
-| `Protocol.DATA` | `0` |
-| `Protocol.RANGING` | `1` |
-| `Protocol.LINK` | `2` |
-| `Protocol.REMOTE` | `3` |
-| `Protocol.MAC` | `4` |
-| `Protocol.ROUTING` | `5` |
-| `Protocol.TRANSPORT` | `6` |
-| `Protocol.ROUTE_MAINTENANCE` | `7` |
-| `Protocol.LINK2` | `8` |
-| `Protocol.USER` | `32` |
-| `Protocol.MAX` | `63` |
+| `Protocol.DATA` | `<Protocol.DATA: 0>` |
+| `Protocol.RANGING` | `<Protocol.RANGING: 1>` |
+| `Protocol.LINK` | `<Protocol.LINK: 2>` |
+| `Protocol.REMOTE` | `<Protocol.REMOTE: 3>` |
+| `Protocol.MAC` | `<Protocol.MAC: 4>` |
+| `Protocol.ROUTING` | `<Protocol.ROUTING: 5>` |
+| `Protocol.TRANSPORT` | `<Protocol.TRANSPORT: 6>` |
+| `Protocol.ROUTE_MAINTENANCE` | `<Protocol.ROUTE_MAINTENANCE: 7>` |
+| `Protocol.LINK2` | `<Protocol.LINK2: 8>` |
+| `Protocol.USER` | `<Protocol.USER: 32>` |
+| `Protocol.MAX` | `<Protocol.MAX: 63>` |
 
 ---
 
@@ -108,9 +108,9 @@ various system events.
 
 | Constant | Value |
 |----------|-------|
-| `Topics.PARAMCHANGE` | `'org.arl.unet.Topics.PARAMCHANGE'` |
-| `Topics.LIFECYCLE` | `'org.arl.unet.Topics.LIFECYCLE'` |
-| `Topics.DATAGRAM` | `'org.arl.unet.Topics.DATAGRAM'` |
+| `Topics.PARAMCHANGE` | `<Topics.PARAMCHANGE: 'org.arl.unet.Topics.PARAMCHANGE'>` |
+| `Topics.LIFECYCLE` | `<Topics.LIFECYCLE: 'org.arl.unet.Topics.LIFECYCLE'>` |
+| `Topics.DATAGRAM` | `<Topics.DATAGRAM: 'org.arl.unet.Topics.DATAGRAM'>` |
 
 ---
 
@@ -125,11 +125,11 @@ during the MAC reservation process.
 
 | Constant | Value |
 |----------|-------|
-| `ReservationStatus.START` | `0` |
-| `ReservationStatus.END` | `1` |
-| `ReservationStatus.FAILURE` | `2` |
-| `ReservationStatus.CANCEL` | `3` |
-| `ReservationStatus.REQUEST` | `4` |
+| `ReservationStatus.START` | `<ReservationStatus.START: 'START'>` |
+| `ReservationStatus.END` | `<ReservationStatus.END: 'END'>` |
+| `ReservationStatus.FAILURE` | `<ReservationStatus.FAILURE: 'FAILURE'>` |
+| `ReservationStatus.CANCEL` | `<ReservationStatus.CANCEL: 'CANCEL'>` |
+| `ReservationStatus.REQUEST` | `<ReservationStatus.REQUEST: 'REQUEST'>` |
 
 ---
 
@@ -148,6 +148,6 @@ Special address constants.
 
 | Constant | Value |
 |----------|-------|
-| `Address.BROADCAST` | `0` |
+| `Address.BROADCAST` | `<Address.BROADCAST: 0>` |
 
 ---

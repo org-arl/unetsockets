@@ -216,7 +216,7 @@ All subsequent operations will fail or return None/-1.
 ### connect()
 
 ```python
-connect(to: 'int', protocol: 'int' = 0) -> 'bool'
+connect(to: 'int', protocol: 'int' = <Protocol.DATA: 0>) -> 'bool'
 ```
 
 Set the default destination address and protocol for sending.
@@ -377,7 +377,7 @@ Get the MIME type for outgoing datagrams.
 ### getPriority()
 
 ```python
-getPriority() -> 'int'
+getPriority() -> 'Priority'
 ```
 
 Get the priority level for outgoing datagrams.
@@ -452,7 +452,7 @@ Get the remote recipient for outgoing datagrams.
 ### getRobustness()
 
 ```python
-getRobustness() -> 'int'
+getRobustness() -> 'Robustness'
 ```
 
 Get the robustness level for outgoing datagrams.
@@ -816,7 +816,7 @@ Set the MIME type for outgoing datagrams.
 ### setPriority()
 
 ```python
-setPriority(priority: 'int') -> 'None'
+setPriority(priority: 'Union[Priority, str]') -> 'None'
 ```
 
 Set the priority level for outgoing datagrams.
@@ -873,7 +873,7 @@ Set the remote recipient for outgoing datagrams.
 ### setRobustness()
 
 ```python
-setRobustness(robustness: 'int') -> 'None'
+setRobustness(robustness: 'Union[Robustness, str]') -> 'None'
 ```
 
 Set the robustness level for outgoing datagrams.
