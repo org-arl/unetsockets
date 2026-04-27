@@ -26,13 +26,6 @@ __all__ = ["UnetSocket"]
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-# When used as a send mode, indicates semi-blocking send().
-# Waits until the data is accepted for transmission, but does
-# not wait for actual transmission for unreliable sockets.
-# If the socket is reliable, waits until delivery is acknowledged
-# or fails. Not a valid timeout value for receive().
-Gateway.SEMI_BLOCKING = -2;
-
 class UnetSocket:
     """High-level socket interface for UnetStack communication.
 
@@ -64,6 +57,48 @@ class UnetSocket:
 
     REQUEST_TIMEOUT = 1000
 
+    NON_BLOCKING = 0
+    """When used as a timeout value, indicates a non-blocking receive().
+    If data is available, it is returned immediately, otherwise returns None.
+
+    When used as a send mode, indicates non-blocking send(). Makes a request to
+    send data, but does not wait for acceptance or transmission.
+    """
+
+    BLOCKING = -1
+    """When used as a timeout value, indicates a blocking receive().
+    The receive() call blocks indefinitely until data is available.
+
+    When used as a send mode, indicates blocking send(). Waits until the
+    data is transmitted. If the socket is reliable, waits until delivery
+    is acknowledged or fails.
+    """
+
+    SEMI_BLOCKING = -2
+    """When used as a send mode, indicates semi-blocking send(). Waits
+    until the data is accepted for transmission, but does not wait
+    for actual transmission for unreliable sockets. If the socket is
+    reliable, waits until delivery is acknowledged or fails.
+
+    Not a valid timeout value for receive().
+    """
+
+    sendMode: int
+    localProtocol: int
+    remoteAddress: int
+    remoteProtocol: int
+    timeout: int
+    provider: Optional[AgentID]
+    ttl: float
+    priority: Priority
+    robustness: Robustness
+    reliability: Optional[bool]
+    route: Optional[str]
+    mimeType: Optional[str]
+    messageClass: Optional[str]
+    remoteRecipient: Optional[str]
+    mailbox: Optional[str]
+
     def __init__(
         self,
         hostname: str,
@@ -81,22 +116,22 @@ class UnetSocket:
             232
             >>> sock.close()
         """
-        self.gw = Gateway(hostname, port)
-        self.sendMode = Gateway.SEMI_BLOCKING
+        self.gw: Optional[Gateway] = Gateway(hostname, port)
+        self.sendMode = UnetSocket.SEMI_BLOCKING
         self.localProtocol = -1
         self.remoteAddress = -1
         self.remoteProtocol = Protocol.DATA
-        self.timeout = Gateway.BLOCKING
-        self.provider: Optional[AgentID] = None
+        self.timeout = UnetSocket.BLOCKING
+        self.provider = None
         self.ttl = float('nan')
         self.priority = Priority.NORMAL;
         self.robustness = Robustness.NORMAL;
         self.reliability : Optional[bool] = None;
-        self.route : Optional[str] = None;
-        self.mimeType : Optional[str]  = None;
-        self.messageClass : Optional[str]  = None;
-        self.remoteRecipient : Optional[str] = None;
-        self.mailbox : Optional[str] = None;
+        self.route = None;
+        self.mimeType = None;
+        self.messageClass = None;
+        self.remoteRecipient = None;
+        self.mailbox = None;
         self._param_change_callbacks: dict[str, Callable[[Any], None]] = {}
         self._subscribe_datagrams()
 
@@ -129,7 +164,7 @@ class UnetSocket:
             if self.gw is None:
                 break
             try:
-                ntf = self.gw.receive(lambda msg: isinstance(msg, ParamChangeNtf), Gateway.BLOCKING)
+                ntf = self.gw.receive(lambda msg: isinstance(msg, ParamChangeNtf), UnetSocket.BLOCKING)
                 logger.debug(f"Received parameter change notification: {ntf}")
                 if ntf is not None and ntf.paramValues is not None:
                     sender = isinstance(ntf.sender, AgentID) and ntf.sender.get_name() or str(ntf.sender)
@@ -341,7 +376,7 @@ class UnetSocket:
             ms: Timeout in milliseconds. 0 = non-blocking, -1 = blocking.
         """
         if ms < 0:
-            ms = Gateway.BLOCKING
+            ms = UnetSocket.BLOCKING
         self.timeout = ms
 
     def getTimeout(self) -> int:
@@ -377,12 +412,12 @@ class UnetSocket:
         Args:
             mode: Send mode. -2 = semi-blocking, 0 = non-blocking, -1 = blocking.
         """
-        if mode not in (Gateway.SEMI_BLOCKING, Gateway.NON_BLOCKING, Gateway.BLOCKING):
+        if mode not in (UnetSocket.SEMI_BLOCKING, UnetSocket.NON_BLOCKING, UnetSocket.BLOCKING):
             logger.error(
                 f"Invalid send mode {mode}. Must be one of "
-                f"{Gateway.SEMI_BLOCKING} (SEMI_BLOCKING), "
-                f"{Gateway.NON_BLOCKING} (NON_BLOCKING), "
-                f"{Gateway.BLOCKING} (BLOCKING)."
+                f"{UnetSocket.SEMI_BLOCKING} (SEMI_BLOCKING), "
+                f"{UnetSocket.NON_BLOCKING} (NON_BLOCKING), "
+                f"{UnetSocket.BLOCKING} (BLOCKING)."
             )
             return
         self.sendMode = mode
@@ -411,7 +446,7 @@ class UnetSocket:
         """Alias for setTtl()."""
         self.setTtl(ttl)
 
-    def getPriority(self) -> int:
+    def getPriority(self) -> Priority:
         """Get the priority level for outgoing datagrams.
 
         Returns:
@@ -419,7 +454,7 @@ class UnetSocket:
         """
         return self.priority
 
-    def setPriority(self, priority: int) -> None:
+    def setPriority(self, priority: Union[Priority, str]) -> None:
         """Set the priority level for outgoing datagrams.
 
         Args:
@@ -428,12 +463,16 @@ class UnetSocket:
         Example:
             >>> sock.setPriority(Priority.HIGH)
         """
-        if priority < Priority.URGENT or priority > Priority.IDLE:
-            logger.error(f"Invalid priority level {priority}. Must be between {Priority.URGENT} and {Priority.IDLE}.")
+        values = [p.value for p in Priority]
+        if priority not in values:
+            logger.error(
+                f"Invalid priority level {priority}. Must be one of "
+                f"{list(values)}."
+            )
             return
-        self.priority = priority
+        self.priority = Priority(priority)
 
-    def getRobustness(self) -> int:
+    def getRobustness(self) -> Robustness:
         """Get the robustness level for outgoing datagrams.
 
         Returns:
@@ -441,7 +480,7 @@ class UnetSocket:
         """
         return self.robustness
 
-    def setRobustness(self, robustness: int) -> None:
+    def setRobustness(self, robustness: Union[Robustness, str]) -> None:
         """Set the robustness level for outgoing datagrams.
 
         Args:
@@ -449,13 +488,14 @@ class UnetSocket:
         Example:
             >>> sock.setRobustness(Robustness.ROBUST)
         """
-        if robustness < Robustness.ROBUST or robustness > Robustness.NORMAL:
+        values = [r.value for r in Robustness]
+        if robustness not in values:
             logger.error(
-                f"Invalid robustness level {robustness}. Must be between "
-                f"{Robustness.ROBUST} and {Robustness.NORMAL}."
+                f"Invalid robustness level {robustness}. Must be one of "
+                f"{list(values)}."
             )
             return
-        self.robustness = robustness
+        self.robustness = Robustness(robustness)
 
     def getReliability(self) -> Optional[bool]:
         """Get the reliability setting for outgoing datagrams.
@@ -638,7 +678,7 @@ class UnetSocket:
             logger.debug(f"Using {provider} as datagram service provider.")
             req.recipient = provider
 
-        if self.sendMode == Gateway.NON_BLOCKING:
+        if self.sendMode == UnetSocket.NON_BLOCKING:
             try:
                 self.gw.send(req)
             except Exception:
@@ -651,7 +691,7 @@ class UnetSocket:
         if rsp is None or rsp.perf != Performative.AGREE:
             return False
 
-        if self.sendMode == Gateway.SEMI_BLOCKING:
+        if self.sendMode == UnetSocket.SEMI_BLOCKING:
             if getattr(req, "reliability", None) is True:
                 return self._await_send_completion(req, delivery_only=True)
             return True
@@ -704,8 +744,9 @@ class UnetSocket:
         logger.debug(f"Trying to receive datagram for up to {effective_timeout} ms")
         try:
             return self.gw.receive(_createMatcher(self.localAddress, self.localProtocol), effective_timeout)
-        except Exception as e:
+        except Exception:
             logger.error(f"Failed to receive datagram", exc_info=True)
+            return None
 
     def getGateway(self) -> Optional[Gateway]:
         """Get the underlying fjåge Gateway for low-level access.
@@ -785,11 +826,15 @@ class UnetSocket:
             >>> sock.host("B")
             31
         """
+        if self.gw is None:
+            logger.error("Cannot resolve host: socket is closed.")
+            return None
 
         arp = self.agentForService(Services.ADDRESS_RESOLUTION)
         if arp is None:
             logger.error("No ADDRESS_RESOLUTION service provider found.")
             return None
+
         req = AddressResolutionReq()
         req.name = nodeName
         req.recipient = arp
@@ -934,7 +979,7 @@ class UnetSocket:
         if override is None:
             return self.timeout
         if override < 0:
-            return Gateway.BLOCKING
+            return UnetSocket.BLOCKING
         return override
 
     def _await_send_completion(self, req: Message, delivery_only: bool) -> bool:

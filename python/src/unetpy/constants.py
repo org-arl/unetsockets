@@ -11,6 +11,8 @@ Example:
 
 from __future__ import annotations
 
+from enum import Enum
+
 from fjagepy import Services as _Services
 
 __all__ = [
@@ -86,7 +88,7 @@ class Services(_Services):
     """Sleep scheduler service."""
 
 
-class Topics:
+class Topics(str, Enum):
     """Topics for pub/sub notifications.
 
     These topics can be subscribed to for receiving notifications about
@@ -106,7 +108,7 @@ class Topics:
     """Topic for incoming datagram notification."""
 
 
-class Protocol:
+class Protocol(int, Enum):
     """Well-known protocol number assignments.
 
     Protocol numbers identify the type of data in a datagram. Numbers 1-31
@@ -148,7 +150,7 @@ class Protocol:
     """Maximum protocol number (63)."""
 
 
-class ReservationStatus:
+class ReservationStatus(str, Enum):
     """Status indicators for MAC channel reservation.
 
     These values indicate the status of a channel reservation request
@@ -171,7 +173,7 @@ class ReservationStatus:
     """Request for information from client agent."""
 
 
-class Address:
+class Address(int, Enum):
     """Special address constants.
 
     Example:
@@ -182,7 +184,7 @@ class Address:
     """Broadcast address (0) - sends to all nodes in the network."""
 
 
-class Priority:
+class Priority(str, Enum):
     """Priority levels for message delivery.
 
     These priority levels determine the quality of service for message
@@ -205,7 +207,7 @@ class Priority:
     """Idle priority. Deliver only when there is no other traffic."""
 
 
-class Robustness:
+class Robustness(str, Enum):
     """Robustness of transmission.
 
     """
@@ -219,7 +221,7 @@ class Robustness:
 class RouteInfo:
     """Route information for routing agents."""
 
-    class Operation:
+    class Operation(str, Enum):
         """Route operation types."""
 
         CREATE = "CREATE"

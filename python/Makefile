@@ -1,8 +1,11 @@
-docs:
-	python docs/generate_api_docs.py
-
 build: docs
 	PIP_USER=0 python3 -m build
+
+docs: lint
+	python docs/generate_api_docs.py
+
+lint:
+	python3 -m mypy src/unetpy
 
 testupload: build
 	twine upload --repository testpypi dist/*
@@ -10,8 +13,8 @@ testupload: build
 upload: build
 	twine upload --repository pypi dist/*
 
-test:
-	pytest tests/
+test: lint
+	pytest -vv tests/
 
 clean:
 	rm -rf build/ dist/ unetpy.egg-info/ python/docs/api/

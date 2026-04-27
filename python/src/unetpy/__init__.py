@@ -2,17 +2,18 @@
 
 import fjagepy
 from fjagepy import *
-
+from . import constants, messages, socket, unetutils
 from .constants import *
-from . import messages
 from .messages import *
-from .socket import UnetSocket
-from .unetutils import to_gps, to_local
+from .socket import *
+from .unetutils import *
 
 
-# Build __all__ dynamically from fjagepy, messages, and unetpy exports
-__all__ = (
+# Re-export fjagepy, UnetStack messages/constants, socket wrapper, and utilities.
+__all__ = list(dict.fromkeys(
     list(getattr(fjagepy, "__all__", []))
     + list(getattr(messages, "__all__", []))
     + list(getattr(constants, "__all__", []))
-)
+    + list(getattr(socket, "__all__", []))
+    + list(getattr(unetutils, "__all__", []))
+))

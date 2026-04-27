@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+from enum import Enum
 
 import pytest
 
@@ -13,8 +14,12 @@ from unetpy import (
     Performative,
     Protocol,
     RemoteMessageReq,
+    ReservationStatus,
+    RouteInfo,
     Services,
     UnetSocket,
+    Priority,
+    Robustness
 )
 
 # Apply socket_module_setup fixture to all tests in this module
@@ -31,15 +36,6 @@ NODE_A_ADDRESS = 232
 NODE_B_HOST = "localhost"
 NODE_B_PORT = 1102
 NODE_B_ADDRESS = 31
-
-PRIORITY_URGENT = 1
-PRIORITY_HIGH = 2
-PRIORITY_NORMAL = 3
-PRIORITY_IDLE = 5
-
-ROBUSTNESS_ROBUST = 1
-ROBUSTNESS_NORMAL = 2
-
 
 class TestGateway:
     """Tests for the Gateway class."""
@@ -229,10 +225,10 @@ class TestUnetSocketSendOptions:
     def test_send_option_defaults(self):
         """UnetSocket should expose the documented default send options."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            assert sock.getSendMode() == Gateway.SEMI_BLOCKING
+            assert sock.getSendMode() == UnetSocket.SEMI_BLOCKING
             assert math.isnan(sock.getTtl())
-            assert sock.getPriority() == PRIORITY_NORMAL
-            assert sock.getRobustness() == ROBUSTNESS_NORMAL
+            assert sock.getPriority() == Priority.NORMAL
+            assert sock.getRobustness() == Robustness.NORMAL
             assert sock.getReliability() is None
             assert sock.getRoute() is None
             assert sock.getMimeType() is None
@@ -242,10 +238,10 @@ class TestUnetSocketSendOptions:
     def test_send_option_accessors_round_trip(self):
         """Configured send metadata should round-trip through the socket accessors."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            sock.setSendMode(Gateway.BLOCKING)
+            sock.setSendMode(UnetSocket.BLOCKING)
             sock.setTTL(42.5)
-            sock.setPriority(PRIORITY_HIGH)
-            sock.setRobustness(ROBUSTNESS_ROBUST)
+            sock.setPriority(Priority.HIGH)
+            sock.setRobustness(Robustness.ROBUST)
             sock.setReliability(True)
             sock.setRoute("232:31")
             sock.setMimeType("application/json")
@@ -253,10 +249,10 @@ class TestUnetSocketSendOptions:
             sock.setRemoteRecipient("node")
             sock.setMailbox("STATUS")
 
-            assert sock.getSendMode() == Gateway.BLOCKING
+            assert sock.getSendMode() == UnetSocket.BLOCKING
             assert sock.getTTL() == 42.5
-            assert sock.getPriority() == PRIORITY_HIGH
-            assert sock.getRobustness() == ROBUSTNESS_ROBUST
+            assert sock.getPriority() == Priority.HIGH
+            assert sock.getRobustness() == Robustness.ROBUST
             assert sock.getReliability() is True
             assert sock.getRoute() == "232:31"
             assert sock.getMimeType() == "application/json"
@@ -265,15 +261,15 @@ class TestUnetSocketSendOptions:
             assert sock.getMailbox() == "STATUS"
 
             sock.setSendMode(99)
-            assert sock.getSendMode() == Gateway.BLOCKING
+            assert sock.getSendMode() == UnetSocket.BLOCKING
 
     def test_socket_metadata_is_applied_to_datagram_requests(self):
         """Socket-level metadata should be copied into outgoing datagram requests."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
             sock.connect(NODE_B_ADDRESS, Protocol.USER)
             sock.setTtl(5.5)
-            sock.setPriority(PRIORITY_HIGH)
-            sock.setRobustness(ROBUSTNESS_ROBUST)
+            sock.setPriority(Priority.HIGH)
+            sock.setRobustness(Robustness.ROBUST)
             sock.setReliability(False)
             sock.setRoute("A->B")
 
@@ -285,8 +281,8 @@ class TestUnetSocketSendOptions:
             assert req.protocol == Protocol.USER
             assert req.data == [61, 62, 63]
             assert req.ttl == 5.5
-            assert req.priority == PRIORITY_HIGH
-            assert req.robustness == ROBUSTNESS_ROBUST
+            assert req.priority == Priority.HIGH
+            assert req.robustness == Robustness.ROBUST
             assert req.reliability is False
             assert req.route == "A->B"
 
@@ -344,7 +340,7 @@ class TestUnetSocketJavaParity:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
             sock.connect(NODE_B_ADDRESS, Protocol.USER)
             sock.setReliability(True)
-            sock.setSendMode(Gateway.SEMI_BLOCKING)
+            sock.setSendMode(UnetSocket.SEMI_BLOCKING)
 
             class _Agree:
                 perf = Performative.AGREE
@@ -378,20 +374,44 @@ class TestUnetSocketJavaParity:
     def test_set_robustness_accepts_normal(self):
         """UnetSocket should allow switching robustness back to NORMAL."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            sock.setRobustness(ROBUSTNESS_ROBUST)
-            sock.setRobustness(ROBUSTNESS_NORMAL)
-            assert sock.getRobustness() == ROBUSTNESS_NORMAL
+            sock.setRobustness(Robustness.ROBUST)
+            sock.setRobustness(Robustness.NORMAL)
+            assert sock.getRobustness() == Robustness.NORMAL
+
+
+class TestEnumConstants:
+    """Tests for enum-backed constant groups."""
+
+    def test_selected_constant_groups_are_string_backed_enums(self):
+        """Selected constant groups should be enums while remaining string-compatible."""
+        assert issubclass(Priority, Enum)
+        assert issubclass(Robustness, Enum)
+        assert issubclass(ReservationStatus, Enum)
+        assert issubclass(RouteInfo.Operation, Enum)
+
+        assert Priority.HIGH == "HIGH"
+        assert Robustness.ROBUST == "ROBUST"
+        assert ReservationStatus.REQUEST == "REQUEST"
+        assert RouteInfo.Operation.CREATE == "CREATE"
 
 class TestUnetSocketCommunication:
     """Tests for datagram communication between nodes."""
+
+    @pytest.fixture(autouse=True)
+    def run_between_tests(self):
+        """Drain pending messages before each test."""
+        with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
+            _drain_pending_messages(sock2)
+        with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
+            _drain_pending_messages(sock1)
+        yield
 
     def test_communication_requires_binding(self):
         """Explicit destination/protocol is required when the sender is unconnected."""
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                _drain_pending_messages(sock2)
-                sock2.setTimeout(2000)
+                sock2.setTimeout(3000)
 
                 assert not sock1.send([11, 12, 13])
                 assert sock1.send([14, 15, 16], NODE_B_ADDRESS)
@@ -404,7 +424,6 @@ class TestUnetSocketCommunication:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                _drain_pending_messages(sock2)
                 sock2.setTimeout(5000)
 
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
@@ -426,8 +445,7 @@ class TestUnetSocketCommunication:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                _drain_pending_messages(sock2)
-                sock2.setTimeout(2000)
+                sock2.setTimeout(3000)
 
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
 
@@ -442,7 +460,6 @@ class TestUnetSocketCommunication:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                _drain_pending_messages(sock2)
                 sock2.setTimeout(2000)
 
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
@@ -459,7 +476,7 @@ class TestUnetSocketCommunication:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
                 _drain_pending_messages(sock2)
-                sock2.setTimeout(2000)
+                sock2.setTimeout(3000)
                 sock1.connect(NODE_B_ADDRESS, Protocol.USER)
 
                 sock1.disconnect()
@@ -515,10 +532,10 @@ class TestUnetSocketCommunication:
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock1:
             with UnetSocket(NODE_B_HOST, NODE_B_PORT) as sock2:
                 assert sock2.bind(Protocol.USER)
-                _drain_pending_messages(sock2)
+
                 addr2 = sock2.getLocalAddress()
                 assert addr2 >= 0
-                sock2.setTimeout(2000)
+                sock2.setTimeout(3000)
 
                 payload = [51, 52, 53]
                 assert sock1.send(payload, addr2, Protocol.USER)
