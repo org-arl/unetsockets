@@ -75,6 +75,13 @@ unetsocket_t unetsocket_setup(_unetsocket_t *usock){
   usock->timeout = -1;
   usock->provider = NULL;
   usock->quit = true;
+  // for new UnetStack versions (5.2.0 and later)
+  fjage_aid_t topic = fjage_aid_topic("org.arl.unet.Topics.DATAGRAM");
+  if (fjage_subscribe(usock->gw, topic) < 0) {
+    free(usock);
+    return NULL;
+  }
+  // for compatibility with older UnetStack versions (before 5.2.0)
   int nagents = agents_for_service(usock, "org.arl.unet.Services.DATAGRAM", NULL, 0);
   fjage_aid_t* agents = malloc((unsigned long)nagents*sizeof(fjage_aid_t));
   for (int i=0; i< nagents; i++) agents[i] = NULL;
