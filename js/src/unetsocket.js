@@ -54,7 +54,7 @@ export default class UnetSocket {
       this._remoteAddress = -1;
       this._localAddress = -1;
       this._remoteProtocol = Protocol.DATA;
-      this._timeout = 0;
+      this._timeout = NON_BLOCKING;
       this._serviceProvider = null;
       this._ttl = NaN;
       this._priority = null;
@@ -73,7 +73,8 @@ export default class UnetSocket {
 
       //for compatibility with older UnetStack versions (before 5.2.0)
       const alist = await this._gw.agentsForService(Services.DATAGRAM);
-      alist.forEach(a => {this._gw.subscribe(this._gw.topic(a));});
+      if (alist != null) alist.forEach(a => {this._gw.subscribe(this._gw.topic(a));});
+      else console.log('No DATAGRAM service providers found for UnetSocket.');
 
       // get local nodeinfo agent
       const nodeinfo = await this._gw.agentForService(Services.NODE_INFO);

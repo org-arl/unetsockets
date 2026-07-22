@@ -1,4 +1,4 @@
-/* global it expect describe AgentID UnetMessages Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine spyOn*/
+/* global it expect describe AgentID UnetMessages Gateway Services isBrowser isJsDom isNode UnetSocket Protocol toGps toLocal beforeEach jasmine spyOn beforeAll*/
 
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
@@ -31,6 +31,17 @@ function delay(ms) {
 }
 
 describe('A UnetSocket', function () {
+  // reset the nodes before running the tests
+  beforeAll(async function() {
+    let usock = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+    // reset the local node address
+    const nodeinfo = await usock.getGateway().agentForService(Services.NODE_INFO);
+    await nodeinfo.set('address', 232);
+    delay(500);
+    usock.close();
+  });
+
+
   it('should be able to be constructed', async function () {
     let usock = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
     expect(usock).toBeInstanceOf(UnetSocket);
