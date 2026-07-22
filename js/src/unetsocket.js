@@ -4,8 +4,8 @@ import {Services, UnetMessages, UnetTopics, Protocol} from './unetutils';
 const BROADCAST_ADDR = 0;
 const REQUEST_TIMEOUT = 5000;
 const NON_BLOCKING = 0;
-const SEMI_BLOCKING = 1;
-const BLOCKING = 2;
+const BLOCKING = -1;
+const SEMI_BLOCKING = -2;
 
 const AddressResolutionReq = UnetMessages.AddressResolutionReq;
 const DatagramDeliveryNtf = UnetMessages.DatagramDeliveryNtf;
@@ -13,8 +13,6 @@ const DatagramFailureNtf = UnetMessages.DatagramFailureNtf;
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
 const DatagramTransmissionNtf = UnetMessages.DatagramTransmissionNtf;
-const RemoteFailureNtf = UnetMessages.RemoteFailureNtf;
-const RemoteSuccessNtf = UnetMessages.RemoteSuccessNtf;
 
 function isReservedProtocol(protocol) {
   return protocol != Protocol.DATA && (protocol < Protocol.USER || protocol > Protocol.MAX);
@@ -407,21 +405,21 @@ export default class UnetSocket {
   /**
    * Sets the send mode that controls how send() behaves after the provider accepts a request:
    * - `UnetSocket.NON_BLOCKING` (0): returns immediately after the provider agrees.
-   * - `UnetSocket.SEMI_BLOCKING` (1): if reliability is not true, returns after AGREE; otherwise
+   * - `UnetSocket.BLOCKING` (-1): waits for a transmission or delivery notification
+   * - `UnetSocket.SEMI_BLOCKING` (-2): if reliability is not true, returns after AGREE; otherwise
    *   waits for a delivery confirmation (RemoteDeliveryNtf / DatagramDeliveryNtf) or failure.
-   * - `UnetSocket.BLOCKING` (2): waits for a transmission or delivery notification
    *   (DatagramTransmissionNtf, DatagramDeliveryNtf) before returning.
    * The default is SEMI_BLOCKING.
-   * @param {number} sendMode - one of UnetSocket.NON_BLOCKING, SEMI_BLOCKING, or BLOCKING
+   * @param {number} sendMode - one of UnetSocket.NON_BLOCKING, BLOCKING or SEMI_BLOCKING
    * @returns {void}
    */
   setSendMode(sendMode) {
-    if ([NON_BLOCKING, SEMI_BLOCKING, BLOCKING].includes(sendMode)) this._sendMode = sendMode;
+    if ([NON_BLOCKING, BLOCKING, SEMI_BLOCKING].includes(sendMode)) this._sendMode = sendMode;
   }
 
   /**
    * Gets the current send mode.
-   * @returns {number} - current send mode (NON_BLOCKING=0, SEMI_BLOCKING=1, BLOCKING=2)
+   * @returns {number} - current send mode (NON_BLOCKING=0, BLOCKING=-1, SEMI_BLOCKING=-2)
    */
   getSendMode() {
     return this._sendMode;
@@ -460,37 +458,22 @@ export default class UnetSocket {
     if (!hasValue(req.mailbox) && hasValue(this._mailbox)) req.mailbox = this._mailbox;
     if (!hasValue(req.messageClass) && hasValue(this._messageClass)) req.messageClass = this._messageClass;
   }
-
-  async _waitForNotification(req, types, timeout = REQUEST_TIMEOUT) {
-    return await this._gw.receive(msg => {
+  /**
+   * Waits for a send completion notification (DatagramTransmissionNtf, DatagramDeliveryNtf, or DatagramFailureNtf)
+   *
+   * @param {DatagramReq} req - the DatagramReq that was sent
+   * @param {boolean} deliveryOnly - if true, only wait for DatagramDeliveryNtf or DatagramFailureNtf
+   * @returns
+   */
+  async _waitForSendCompletion(req, deliveryOnly = false) {
+    const types = deliveryOnly ? [DatagramDeliveryNtf, DatagramFailureNtf] : [DatagramTransmissionNtf, DatagramDeliveryNtf, DatagramFailureNtf];
+    const notification = await this._gw.receive(msg => {
       if (!types.some(type => msg instanceof type)) return false;
       if (hasValue(msg.inReplyTo) && msg.inReplyTo === req.msgID) return true;
       return false;
-    }, timeout);
-  }
-
-  async _waitForSemiBlockingOutcome(req) {
-    const notification = await this._waitForNotification(req, [
-      DatagramDeliveryNtf,
-      DatagramFailureNtf,
-      RemoteSuccessNtf,
-      RemoteFailureNtf,
-    ]);
+    }, REQUEST_TIMEOUT);
     if (notification == null) return false;
-    if (notification instanceof DatagramFailureNtf || notification instanceof RemoteFailureNtf) return false;
-    return true;
-  }
-
-  async _waitForBlockingOutcome(req) {
-    const notification = await this._waitForNotification(req, [
-      DatagramTransmissionNtf,
-      DatagramDeliveryNtf,
-      DatagramFailureNtf,
-      RemoteSuccessNtf,
-      RemoteFailureNtf,
-    ]);
-    if (notification == null) return false;
-    if (notification instanceof DatagramFailureNtf || notification instanceof RemoteFailureNtf) return false;
+    if (notification instanceof DatagramFailureNtf) return false;
     return true;
   }
 
@@ -529,18 +512,18 @@ export default class UnetSocket {
       req.recipient = await this._resolveProvider();
       if (req.recipient == null) return false;
     }
-    const rsp = await this._gw.request(req, REQUEST_TIMEOUT);
-    if (rsp == null || rsp.perf != Performative.AGREE) return false;
 
-    if (this._sendMode === NON_BLOCKING) return true;
-
-    if (this._sendMode === SEMI_BLOCKING) {
-      const effectiveReliability = hasValue(req.reliability) ? req.reliability : this._reliability;
-      if (effectiveReliability !== true) return true;
-      return await this._waitForSemiBlockingOutcome(req);
+    if (this._sendMode === NON_BLOCKING){
+      await this._gw.send(req);
+      return true;
     }
-
-    return await this._waitForBlockingOutcome(req);
+    const waitForTX = hasValue(req.reliability) ? req.reliability : false;
+    const rsp = await this._gw.request(req, REQUEST_TIMEOUT);
+    if (rsp == null || rsp.perf !== Performative.AGREE) return false;
+    if (this._sendMode === SEMI_BLOCKING && !waitForTX) return true;
+    const ntf = await this._gw.receive(req, BLOCKING);
+    if (ntf == null) return false;
+    return (ntf instanceof DatagramDeliveryNtf || ntf instanceof DatagramTransmissionNtf);
   }
 
   /**
@@ -641,5 +624,5 @@ export default class UnetSocket {
 }
 
 UnetSocket.NON_BLOCKING = NON_BLOCKING;
-UnetSocket.SEMI_BLOCKING = SEMI_BLOCKING;
 UnetSocket.BLOCKING = BLOCKING;
+UnetSocket.SEMI_BLOCKING = SEMI_BLOCKING;

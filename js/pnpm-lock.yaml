@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       fjage:
-        specifier: 2.3.0
-        version: 2.3.0
+        specifier: 2.3.1
+        version: 2.3.1
     devDependencies:
       '@babel/eslint-parser':
         specifier: ^7.28.6
@@ -714,8 +714,8 @@ packages:
     resolution: {integrity: sha512-v2ZsoEuVHYy8ZIlYqwPe/39Cy+cFDzp4dXPaxNvkEuouymu+2Jbz0PxpKarJHYJTmv2HWT3O382qY8l4jMWthw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  fjage@2.3.0:
-    resolution: {integrity: sha512-E29+ezjV2L5TFpV62EiVQQ9T554PBaLpaCOEboJeS8mLZdB/s6UpUN78P8hcuuH5MajwLyEJBO0nQARQV21/LA==}
+  fjage@2.3.1:
+    resolution: {integrity: sha512-tiP7gjjanXKjGQLovSTI3O5o6+EAb+6IGZMDlUT2XOWpkU3V0L4SUOFY8bwEiUk3TJOcyfSY13ybeZ93Pk2WyQ==}
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -2310,7 +2310,7 @@ snapshots:
       locate-path: 7.2.0
       path-exists: 5.0.0
 
-  fjage@2.3.0:
+  fjage@2.3.1:
     dependencies:
       browser-or-node: 3.0.0
 

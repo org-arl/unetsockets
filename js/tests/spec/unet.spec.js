@@ -258,6 +258,28 @@ describe('A UnetSocket', function () {
     usock2.close();
   });
 
+  it('should wait (unbounded) for semi-blocking sends for reliable datagrams for delivery/failure notification', async function() {
+    let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
+
+    // connect to an unknown target address to force a failure notification
+    usock1.connect(32, Protocol.USER);
+    usock1.setReliability(true);
+    usock1.setSendMode(UnetSocket.SEMI_BLOCKING);
+
+    const receiveSpy = spyOn(usock1._gw, 'receive').and.callThrough();
+    let result = await usock1.send([5, 9, 2, 6, 5]);
+    expect(result).toBeFalse(); // Expecting a failure notification since the target address is unknown
+    expect(receiveSpy).toHaveBeenCalled();
+
+    // connect to a known target address to force a delivery notification
+    usock1.connect(31, Protocol.USER);
+    result = await usock1.send([3, 5, 8, 9]);
+    expect(result).toBeTrue(); // Expecting a delivery notification since the target address is known
+    expect(receiveSpy).toHaveBeenCalled();
+
+    usock1.close();
+  });
+
   it('should be only able to communicate on the protocol connected to', async function(){
     let usock1 = await new UnetSocket(gwOpts[0].hostname, gwOpts[0].port);
     let usock2 = await new UnetSocket(gwOpts[1].hostname, gwOpts[1].port);

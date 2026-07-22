@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/org-arl/unetsockets#readme",
   "dependencies": {
-    "fjage": "2.3.0"
+    "fjage": "2.3.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
