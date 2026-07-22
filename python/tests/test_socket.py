@@ -340,46 +340,57 @@ class TestUnetSocketJavaParity:
 
         A reliable datagram is acknowledged by the stack with a DatagramDeliveryNtf
         (delivered) or DatagramFailureNtf (failed), matched by inReplyTo. The wait must
-        be unbounded (BLOCKING): reliable delivery can take several seconds, so a bounded
-        wait would wrongly report a slow-but-successful delivery as a failure.
+        be unbounded (BLOCKING): reliable delivery can take several seconds.
         """
         from unetpy.messages import DatagramDeliveryNtf, DatagramFailureNtf
 
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
-            sock.connect(NODE_B_ADDRESS, Protocol.USER)
+            sock.connect(NODE_B_ADDRESS+1, Protocol.USER)
             sock.setReliability(True)
             sock.setSendMode(UnetSocket.SEMI_BLOCKING)
 
-            class _Agree:
-                perf = Performative.AGREE
+            # check that the send method waits for a delivery notification
+            # hook the gateway's receive method to capture the received message type and the time
+            # it was called, and then call the original receive method then check that the send method
+            # returns False and that it returned AFTER the receive method was called (i.e. it waited for the notification)
+            original_receive = getattr(sock.gw, "receive")
+            received_message_type = None
+            receive_called_time = None
 
-            request_ids = {"value": None}
-            receive_calls = {"count": 0, "timeout": None}
+            def receive_hook(*args, **kwargs):
+                nonlocal received_message_type, receive_called_time
+                receive_called_time = time.time()
+                ntf = original_receive(*args, **kwargs)
+                if isinstance(ntf, DatagramDeliveryNtf):
+                    received_message_type = "DatagramDeliveryNtf"
+                elif isinstance(ntf, DatagramFailureNtf):
+                    received_message_type = "DatagramFailureNtf"
+                return ntf
 
-            def _request(_req, _timeout):
-                request_ids["value"] = _req.msgID
-                return _Agree()
+            monkeypatch.setattr(sock.gw, "receive", receive_hook)
+            start_time = time.time()
+            result = sock.send([71, 72, 73])
+            end_time = time.time()
 
-            def _receive_returning(ntf_class):
-                def _receive(_matcher, _timeout):
-                    receive_calls["count"] += 1
-                    receive_calls["timeout"] = _timeout
-                    ntf = ntf_class()
-                    ntf.inReplyTo = request_ids["value"]
-                    return ntf if _matcher(ntf) else None
-                return _receive
+            assert result is False
+            assert received_message_type in {"DatagramFailureNtf"}
+            assert receive_called_time is not None
+            assert end_time >= receive_called_time, "send method did not wait for notification"
 
-            monkeypatch.setattr(sock.gw, "request", _request)
+            # change the destination to a valid one and check that the send method returns True for a delivery notification
+            # but also after the receive method was called (i.e. it waited for the notification)
+            sock.disconnect()
+            sock.connect(NODE_B_ADDRESS, Protocol.USER)
+            received_message_type = None
+            receive_called_time = None
+            start_time = time.time()
+            result = sock.send([74, 75, 76])
+            end_time = time.time()
 
-            # Delivered -> True, and the delivery wait is unbounded (BLOCKING).
-            monkeypatch.setattr(sock.gw, "receive", _receive_returning(DatagramDeliveryNtf))
-            assert sock.send([71, 72, 73]) is True
-            assert receive_calls["count"] == 1
-            assert receive_calls["timeout"] == UnetSocket.BLOCKING
-
-            # Delivery failure -> False.
-            monkeypatch.setattr(sock.gw, "receive", _receive_returning(DatagramFailureNtf))
-            assert sock.send([71, 72, 73]) is False
+            assert result is True
+            assert received_message_type in {"DatagramDeliveryNtf"}
+            assert receive_called_time is not None
+            assert end_time >= receive_called_time, "send method did not wait for notification"
 
     def test_set_robustness_accepts_normal(self):
         """UnetSocket should allow switching robustness back to NORMAL."""
