@@ -52,49 +52,53 @@
     *   [setSendMode][48]
         *   [Parameters][49]
     *   [getSendMode][50]
-    *   [send][51]
+    *   [\_waitForSendCompletion][51]
         *   [Parameters][52]
-    *   [receive][53]
-    *   [getGateway][54]
-    *   [agentForService][55]
-        *   [Parameters][56]
-    *   [agentsForService][57]
+    *   [send][53]
+        *   [Parameters][54]
+    *   [receive][55]
+    *   [getGateway][56]
+    *   [agentForService][57]
         *   [Parameters][58]
-    *   [agent][59]
+    *   [agentsForService][59]
         *   [Parameters][60]
-    *   [host][61]
+    *   [agent][61]
         *   [Parameters][62]
-    *   [onParamChange][63]
+    *   [host][63]
         *   [Parameters][64]
-    *   [removeParamChange][65]
+    *   [onParamChange][65]
         *   [Parameters][66]
-*   [Protocol][67]
-*   [UnetMessages][68]
-*   [toGps][69]
-    *   [Parameters][70]
-*   [toLocal][71]
+    *   [removeParamChange][67]
+        *   [Parameters][68]
+*   [Protocol][69]
+*   [UnetMessages][70]
+*   [toGps][71]
     *   [Parameters][72]
-*   [DatagramReq][73]
-    *   [Properties][74]
-*   [DatagramNtf][75]
+*   [toLocal][73]
+    *   [Parameters][74]
+*   [DatagramReq][75]
     *   [Properties][76]
-*   [AgentID][77]
-*   [Services][78]
-*   [Performative][79]
-*   [MessageClass][80]
+*   [DatagramNtf][77]
+    *   [Properties][78]
+*   [AgentID][79]
+*   [Services][80]
+*   [Performative][81]
+*   [MessageClass][82]
 
 ## UnetSocket
 
+[js/src/unetsocket.js:44-624][83]
+
 Creates a new UnetSocket to connect to a running Unet instance. This constructor returns a
-[Promise][81] instead of the constructed UnetSocket object. Use `await` or `.then()` to get
+[Promise][84] instead of the constructed UnetSocket object. Use `await` or `.then()` to get
 a reference to the UnetSocket object. Based on if this is run in a Browser or Node.js,
 it will internally connect over WebSockets or TCP respectively.
 
 ### Parameters
 
-*   `hostname` **[string][82]?** hostname/ip address of the master container to connect to
-*   `port` **[string][82]?** port number of the master container to connect to
-*   `path` **[string][82]** path of the master container to connect to (for WebSockets) (optional, default `''`)
+*   `hostname` **[string][85]?** hostname/ip address of the master container to connect to
+*   `port` **[string][85]?** port number of the master container to connect to
+*   `path` **[string][85]** path of the master container to connect to (for WebSockets) (optional, default `''`)
 
 ### Examples
 
@@ -102,9 +106,11 @@ it will internally connect over WebSockets or TCP respectively.
 let socket = await new UnetSocket('localhost', 8081, '/ws/');
 ```
 
-Returns **[Promise][81]<[UnetSocket][1]>** Promise which resolves to the UnetSocket object being constructed
+Returns **[Promise][84]<[UnetSocket][1]>** Promise which resolves to the UnetSocket object being constructed
 
 ### close
+
+[js/src/unetsocket.js:113-116][86]
 
 Closes the socket. The socket functionality may not longer be accessed after this method is called.
 
@@ -112,11 +118,15 @@ Returns **void**&#x20;
 
 ### isClosed
 
+[js/src/unetsocket.js:122-124][87]
+
 Checks if a socket is closed.
 
-Returns **[boolean][83]** true if closed, false if open
+Returns **[boolean][88]** true if closed, false if open
 
 ### bind
+
+[js/src/unetsocket.js:133-139][89]
 
 Binds a socket to listen to a specific protocol datagrams.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are reserved protocols
@@ -124,11 +134,13 @@ and cannot be bound. Unbound sockets listen to all unreserved
 
 #### Parameters
 
-*   `protocol` **[Protocol][67]** protocol number to listen for
+*   `protocol` **[Protocol][69]** protocol number to listen for
 
-Returns **[boolean][83]** true on success, false on failure
+Returns **[boolean][88]** true on success, false on failure
 
 ### unbind
+
+[js/src/unetsocket.js:146-146][90]
 
 Unbinds a socket so that it listens to all unreserved protocols.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved.
@@ -137,11 +149,15 @@ Returns **void**&#x20;
 
 ### isBound
 
+[js/src/unetsocket.js:152-152][91]
+
 Checks if a socket is bound.
 
-Returns **[boolean][83]** true if bound to a protocol, false if unbound
+Returns **[boolean][88]** true if bound to a protocol, false if unbound
 
 ### connect
+
+[js/src/unetsocket.js:166-173][92]
 
 Sets the default destination address and destination protocol number for datagrams sent
 using this socket. The defaults can be overridden for specific send() calls.
@@ -152,12 +168,14 @@ and cannot be used for sending datagrams using the socket.
 
 #### Parameters
 
-*   `to` **[number][84]** default destination node address
-*   `protocol` **[Protocol][67]** default protocol number
+*   `to` **[number][93]** default destination node address
+*   `protocol` **[Protocol][69]** default protocol number
 
-Returns **[boolean][83]** true on success, false on failure
+Returns **[boolean][88]** true on success, false on failure
 
 ### disconnect
+
+[js/src/unetsocket.js:180-183][94]
 
 Resets the default destination address to undefined, and the default protocol number
 to Protocol.DATA.
@@ -166,70 +184,90 @@ Returns **void**&#x20;
 
 ### isConnected
 
+[js/src/unetsocket.js:189-189][95]
+
 Checks if a socket is connected, i.e., has a default destination address and protocol number.
 
-Returns **[boolean][83]** true if connected, false otherwise
+Returns **[boolean][88]** true if connected, false otherwise
 
 ### getLocalAddress
 
+[js/src/unetsocket.js:195-201][96]
+
 Gets the local node address of the Unet node connected to.
 
-Returns **[Promise][81]\<int>** local node address, or -1 on error
+Returns **[Promise][84]\<int>** local node address, or -1 on error
 
 ### getLocalProtocol
 
+[js/src/unetsocket.js:207-207][97]
+
 Gets the protocol number that the socket is bound to.
 
-Returns **[number][84]** protocol number if socket is bound, -1 otherwise
+Returns **[number][93]** protocol number if socket is bound, -1 otherwise
 
 ### getRemoteAddress
 
+[js/src/unetsocket.js:213-213][98]
+
 Gets the default destination node address for a connected socket.
 
-Returns **[number][84]** default destination node address if connected, -1 otherwise
+Returns **[number][93]** default destination node address if connected, -1 otherwise
 
 ### getRemoteProtocol
 
+[js/src/unetsocket.js:219-219][99]
+
 Gets the default transmission protocol number.
 
-Returns **[number][84]** default protocol number used to transmit a datagram
+Returns **[number][93]** default protocol number used to transmit a datagram
 
 ### setTimeout
 
+[js/src/unetsocket.js:229-232][100]
+
 Sets the timeout for datagram reception. A timeout of 0 means the
-[receive method][85] will check any appropriate
+[receive method][101] will check any appropriate
 Datagram has already been received (and is cached) else return immediately.
 
 #### Parameters
 
-*   `ms` **[number][84]** timeout in milliseconds
+*   `ms` **[number][93]** timeout in milliseconds
 
 Returns **void**&#x20;
 
 ### getTimeout
 
+[js/src/unetsocket.js:238-238][102]
+
 Gets the timeout for datagram reception.
 
-Returns **[number][84]** timeout in milliseconds
+Returns **[number][93]** timeout in milliseconds
 
 ### setTTL
+
+[js/src/unetsocket.js:246-248][103]
 
 Sets the default time-to-live for datagrams sent using this socket.
 TTL is advisory; an agent may choose to ignore it.
 
 #### Parameters
 
-*   `ttl` **[number][84]** time-to-live in seconds
+*   `ttl` **[number][93]** time-to-live in seconds
 
 Returns **void**&#x20;
 
 ### getTTL
 
+[js/src/unetsocket.js:254-256][104]
+
 Gets the default time-to-live for datagrams sent using this socket.
 
-Returns **[number][84]** time-to-live in seconds, or NaN if not set
+Returns **[number][93]** time-to-live in seconds, or NaN if not set
 
 ### setPriority
+
+[js/src/unetsocket.js:263-265][105]
 
 Sets the default priority for datagrams sent using this socket.
 
@@ -241,11 +279,15 @@ Returns **void**&#x20;
 
 ### getPriority
 
+[js/src/unetsocket.js:271-273][106]
+
 Gets the default priority for datagrams sent using this socket.
 
 Returns **any** priority value, or null if not set
 
 ### setReliability
+
+[js/src/unetsocket.js:282-284][107]
 
 Sets the default reliability for datagrams sent using this socket.
 When set to true, the socket will request reliable delivery and, in
@@ -253,17 +295,21 @@ SEMI\_BLOCKING mode, will wait for a delivery confirmation before returning.
 
 #### Parameters
 
-*   `reliability` **[boolean][83]** true for reliable delivery, false for unreliable
+*   `reliability` **[boolean][88]** true for reliable delivery, false for unreliable
 
 Returns **void**&#x20;
 
 ### getReliability
 
+[js/src/unetsocket.js:290-292][108]
+
 Gets the default reliability setting for datagrams sent using this socket.
 
-Returns **([boolean][83] | null)** true if reliable, false if unreliable, null if not set
+Returns **([boolean][88] | null)** true if reliable, false if unreliable, null if not set
 
 ### setRoute
+
+[js/src/unetsocket.js:300-302][109]
 
 Sets the default route identifier for datagrams sent using this socket.
 Route selection is provider-dependent; not all providers support explicit routing.
@@ -276,28 +322,36 @@ Returns **void**&#x20;
 
 ### getRoute
 
+[js/src/unetsocket.js:308-310][110]
+
 Gets the default route identifier for datagrams sent using this socket.
 
 Returns **any** route identifier, or null if not set
 
 ### setMimeType
 
+[js/src/unetsocket.js:318-320][111]
+
 Sets the default MIME type describing the datagram payload.
 This can be used by REMOTE service providers to apply content-aware compression.
 
 #### Parameters
 
-*   `mimeType` **[string][82]** MIME type string (e.g. 'application/json')
+*   `mimeType` **[string][85]** MIME type string (e.g. 'application/json')
 
 Returns **void**&#x20;
 
 ### getMimeType
 
+[js/src/unetsocket.js:326-328][112]
+
 Gets the default MIME type for datagrams sent using this socket.
 
-Returns **([string][82] | null)** MIME type string, or null if not set
+Returns **([string][85] | null)** MIME type string, or null if not set
 
 ### setRemoteRecipient
+
+[js/src/unetsocket.js:336-338][113]
 
 Sets the default remote recipient for datagrams sent using this socket.
 Used by REMOTE service providers to address a specific entity on the remote node.
@@ -310,11 +364,15 @@ Returns **void**&#x20;
 
 ### getRemoteRecipient
 
+[js/src/unetsocket.js:344-346][114]
+
 Gets the default remote recipient for datagrams sent using this socket.
 
 Returns **any** remote recipient identifier, or null if not set
 
 ### setMailbox
+
+[js/src/unetsocket.js:355-357][115]
 
 Sets the default mailbox name for datagrams sent using this socket.
 Mailboxes are used by REMOTE service providers to deliver messages
@@ -322,34 +380,42 @@ to a named queue on the remote node.
 
 #### Parameters
 
-*   `mailbox` **[string][82]** mailbox name
+*   `mailbox` **[string][85]** mailbox name
 
 Returns **void**&#x20;
 
 ### getMailbox
 
+[js/src/unetsocket.js:363-365][116]
+
 Gets the default mailbox name for datagrams sent using this socket.
 
-Returns **([string][82] | null)** mailbox name, or null if not set
+Returns **([string][85] | null)** mailbox name, or null if not set
 
 ### setMessageClass
+
+[js/src/unetsocket.js:373-375][117]
 
 Sets the default application message class for datagrams sent using this socket.
 Used by REMOTE service providers to associate a fully-qualified class name with the payload.
 
 #### Parameters
 
-*   `messageClass` **[string][82]** fully-qualified message class name (e.g. 'org.example.Status')
+*   `messageClass` **[string][85]** fully-qualified message class name (e.g. 'org.example.Status')
 
 Returns **void**&#x20;
 
 ### getMessageClass
 
+[js/src/unetsocket.js:381-383][118]
+
 Gets the default application message class for datagrams sent using this socket.
 
-Returns **([string][82] | null)** message class name, or null if not set
+Returns **([string][85] | null)** message class name, or null if not set
 
 ### setServiceProvider
+
+[js/src/unetsocket.js:392-395][119]
 
 Overrides the service provider used to transmit datagrams. When set, provider
 auto-selection is bypassed and all sends go through the specified agent.
@@ -357,40 +423,59 @@ Pass null to re-enable auto-selection.
 
 #### Parameters
 
-*   `provider` **([AgentID][77] | [string][82] | null)** agent id, agent name string, or null to clear the override
+*   `provider` **([AgentID][79] | [string][85] | null)** agent id, agent name string, or null to clear the override
 
 Returns **void**&#x20;
 
 ### getServiceProvider
 
+[js/src/unetsocket.js:401-403][120]
+
 Gets the currently configured service provider override.
 
-Returns **([AgentID][77] | null)** the override agent id, or null if auto-selection is active
+Returns **([AgentID][79] | null)** the override agent id, or null if auto-selection is active
 
 ### setSendMode
+
+[js/src/unetsocket.js:416-418][121]
 
 Sets the send mode that controls how send() behaves after the provider accepts a request:
 
 *   `UnetSocket.NON_BLOCKING` (0): returns immediately after the provider agrees.
-*   `UnetSocket.SEMI_BLOCKING` (1): if reliability is not true, returns after AGREE; otherwise
+*   `UnetSocket.BLOCKING` (-1): waits for a transmission or delivery notification
+*   `UnetSocket.SEMI_BLOCKING` (-2): if reliability is not true, returns after AGREE; otherwise
     waits for a delivery confirmation (RemoteDeliveryNtf / DatagramDeliveryNtf) or failure.
-*   `UnetSocket.BLOCKING` (2): waits for a transmission or delivery notification
     (DatagramTransmissionNtf, DatagramDeliveryNtf) before returning.
     The default is SEMI\_BLOCKING.
 
 #### Parameters
 
-*   `sendMode` **[number][84]** one of UnetSocket.NON\_BLOCKING, SEMI\_BLOCKING, or BLOCKING
+*   `sendMode` **[number][93]** one of UnetSocket.NON\_BLOCKING, BLOCKING or SEMI\_BLOCKING
 
 Returns **void**&#x20;
 
 ### getSendMode
 
+[js/src/unetsocket.js:424-426][122]
+
 Gets the current send mode.
 
-Returns **[number][84]** current send mode (NON\_BLOCKING=0, SEMI\_BLOCKING=1, BLOCKING=2)
+Returns **[number][93]** current send mode (NON\_BLOCKING=0, BLOCKING=-1, SEMI\_BLOCKING=-2)
+
+### \_waitForSendCompletion
+
+[js/src/unetsocket.js:468-478][123]
+
+Waits for a send completion notification (DatagramTransmissionNtf, DatagramDeliveryNtf, or DatagramFailureNtf)
+
+#### Parameters
+
+*   `req` **[DatagramReq][75]** the DatagramReq that was sent
+*   `deliveryOnly` **[boolean][88]** if true, only wait for DatagramDeliveryNtf or DatagramFailureNtf (optional, default `false`)
 
 ### send
+
+[js/src/unetsocket.js:489-527][124]
 
 Transmits a datagram to the specified node address using the specified protocol.
 Protocol numbers between Protocol.DATA+1 to Protocol.USER-1 are considered reserved,
@@ -398,20 +483,24 @@ and cannot be used for sending datagrams using the socket.
 
 #### Parameters
 
-*   `data` **([Array][86]<[number][84]> | [DatagramReq][73])** data to be sent over the socket as an Array of bytes or DatagramReq
-*   `to` **[number][84]** destination node address (optional, default `this._remoteAddress`)
-*   `protocol` **[number][84]** protocol number (optional, default `this._remoteProtocol`)
+*   `data` **([Array][125]<[number][93]> | [DatagramReq][75])** data to be sent over the socket as an Array of bytes or DatagramReq
+*   `to` **[number][93]** destination node address (optional, default `this._remoteAddress`)
+*   `protocol` **[number][93]** protocol number (optional, default `this._remoteProtocol`)
 
-Returns **[Promise][81]<[boolean][83]>** true if the Unet node agreed to send out the Datagram, false otherwise
+Returns **[Promise][84]<[boolean][88]>** true if the Unet node agreed to send out the Datagram, false otherwise
 
 ### receive
+
+[js/src/unetsocket.js:535-546][126]
 
 Receives a datagram sent to the local node and the bound protocol number. If the socket is unbound,
 then datagrams with all unreserved protocols are received. Any broadcast datagrams are also received.
 
-Returns **[Promise][81]<[DatagramNtf][75]?>** datagram received by the socket
+Returns **[Promise][84]<[DatagramNtf][77]?>** datagram received by the socket
 
 ### getGateway
+
+[js/src/unetsocket.js:552-552][127]
 
 Gets a Gateway to provide low-level access to UnetStack.
 
@@ -419,43 +508,53 @@ Returns **Gateway** underlying fjage Gateway supporting this socket
 
 ### agentForService
 
+[js/src/unetsocket.js:559-562][128]
+
 Gets an AgentID providing a specified service for low-level access to UnetStack
 
 #### Parameters
 
-*   `svc` **[string][82]** the named service of interest
+*   `svc` **[string][85]** the named service of interest
 
-Returns **[Promise][81]<[AgentID][77]?>** a promise which returns an [AgentID][77] that provides the service when resolved
+Returns **[Promise][84]<[AgentID][79]?>** a promise which returns an [AgentID][79] that provides the service when resolved
 
 ### agentsForService
 
+[js/src/unetsocket.js:569-572][129]
+
 #### Parameters
 
-*   `svc` **[string][82]** the named service of interest
+*   `svc` **[string][85]** the named service of interest
 
-Returns **[Promise][81]<[Array][86]<[AgentID][77]>>** a promise which returns an array of [AgentIDs][77] that provides the service when resolved
+Returns **[Promise][84]<[Array][125]<[AgentID][79]>>** a promise which returns an array of [AgentIDs][79] that provides the service when resolved
 
 ### agent
+
+[js/src/unetsocket.js:579-582][130]
 
 Gets a named AgentID for low-level access to UnetStack.
 
 #### Parameters
 
-*   `name` **[string][82]** name of agent
+*   `name` **[string][85]** name of agent
 
-Returns **[AgentID][77]** AgentID for the given name
+Returns **[AgentID][79]** AgentID for the given name
 
 ### host
+
+[js/src/unetsocket.js:589-598][131]
 
 Resolve node name to node address.
 
 #### Parameters
 
-*   `nodeName` **[string][82]** name of the node to resolve
+*   `nodeName` **[string][85]** name of the node to resolve
 
-Returns **[Promise][81]<[number][84]?>** address of the node, or null if unable to resolve
+Returns **[Promise][84]<[number][93]?>** address of the node, or null if unable to resolve
 
 ### onParamChange
+
+[js/src/unetsocket.js:609-612][132]
 
 Registers a callback function to be called when a parameter value changes for the local node. This
 uses the ParamChangeNtf messages published by the Unet node to notify of parameter changes. The callback
@@ -463,56 +562,68 @@ function will be called with the new value of the parameter.
 
 #### Parameters
 
-*   `agentId` **([AgentID][77] | [string][82])**&#x20;
-*   `paramName` **[string][82]**&#x20;
-*   `callback` **function ([object][87]): void**&#x20;
+*   `agentId` **([AgentID][79] | [string][85])**&#x20;
+*   `paramName` **[string][85]**&#x20;
+*   `callback` **function ([object][133]): void**&#x20;
 
 ### removeParamChange
+
+[js/src/unetsocket.js:620-623][134]
 
 Removes a callback function registered to be called when a parameter value changes for the local node.
 
 #### Parameters
 
-*   `agentId` **([AgentID][77] | [string][82])**&#x20;
-*   `paramName` **[string][82]**&#x20;
+*   `agentId` **([AgentID][79] | [string][85])**&#x20;
+*   `paramName` **[string][85]**&#x20;
 
 ## Protocol
 
+[js/src/unetutils.js:46-58][135]
+
 Well-known protocol number assignments used in UnetStack
 
-Type: [Object][87]<[string][82], [number][84]>
+Type: [Object][133]<[string][85], [number][93]>
 
 ## UnetMessages
 
+[js/src/unetutils.js:64-171][136]
+
 Well-known protocol Messages used in UnetStack
 
-Type: [Object][87]<[string][82], [MessageClass][80]>
+Type: [Object][133]<[string][85], [MessageClass][82]>
 
 ## toGps
+
+[js/src/unetutils.js:181-187][137]
 
 Convert coordinates from a local coordinates to GPS coordinate
 
 ### Parameters
 
-*   `origin` **[Array][86]** Local coordinate system's origin as `[latitude, longitude]`
-*   `x` **[Number][84]** X coordinate of the local coordinate to be converted
-*   `y` **[Number][84]** Y coordinate of the local coordinate to be converted
+*   `origin` **[Array][125]** Local coordinate system's origin as `[latitude, longitude]`
+*   `x` **[Number][93]** X coordinate of the local coordinate to be converted
+*   `y` **[Number][93]** Y coordinate of the local coordinate to be converted
 
-Returns **[Array][86]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
+Returns **[Array][125]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
 
 ## toLocal
+
+[js/src/unetutils.js:196-202][138]
 
 Convert coordinates from a GPS coordinates to local coordinate
 
 ### Parameters
 
-*   `origin` **[Array][86]** Local coordinate system's origin as `[latitude, longitude]`
-*   `lat` **[Number][84]** Latitude of the GPS coordinate to be converted
-*   `lon` **[Number][84]** Longitude of the GPS coordinate to be converted
+*   `origin` **[Array][125]** Local coordinate system's origin as `[latitude, longitude]`
+*   `lat` **[Number][93]** Latitude of the GPS coordinate to be converted
+*   `lon` **[Number][93]** Longitude of the GPS coordinate to be converted
 
-Returns **[Array][86]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
+Returns **[Array][125]** GPS coordinates (in decimal degrees) as `[latitude, longitude]`
 
 ## DatagramReq
+
+[js/src/unetutils.js:264-264][139]
 
 A message which requests the transmission of the datagram from the Unet
 
@@ -520,20 +631,22 @@ Type: Message
 
 ### Properties
 
-*   `data` **[Array][86]<[number][84]>** data as an Array of bytes
-*   `from` **[number][84]** from/source node address
-*   `to` **[number][84]** to/destination node address
-*   `protocol` **[number][84]** protocol number to be used to send this Datagram
+*   `data` **[Array][125]<[number][93]>** data as an Array of bytes
+*   `from` **[number][93]** from/source node address
+*   `to` **[number][93]** to/destination node address
+*   `protocol` **[number][93]** protocol number to be used to send this Datagram
 *   `priority` **any** priority assigned to the datagram request
-*   `reliability` **[boolean][83]** true if Datagram should be reliable, false if unreliable
-*   `ttl` **[number][84]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+*   `reliability` **[boolean][88]** true if Datagram should be reliable, false if unreliable
+*   `ttl` **[number][93]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
 *   `route` **any** route identifier to use when supported by the provider
-*   `mimeType` **[string][82]** MIME type describing the payload
+*   `mimeType` **[string][85]** MIME type describing the payload
 *   `remoteRecipient` **any** recipient identifier used by REMOTE service providers
-*   `mailbox` **[string][82]** mailbox name used by REMOTE service providers
+*   `mailbox` **[string][85]** mailbox name used by REMOTE service providers
 *   `messageClass` **any** application message class used by REMOTE service providers
 
 ## DatagramNtf
+
+[js/src/unetutils.js:264-264][140]
 
 Notification of received datagram message received by the Unet node.
 
@@ -541,33 +654,41 @@ Type: Message
 
 ### Properties
 
-*   `data` **[Array][86]<[number][84]>** data as an Array of bytes
-*   `from` **[number][84]** from/source node address
-*   `to` **[number][84]** to/destination node address
-*   `protocol` **[number][84]** protocol number to be used to send this Datagram
-*   `ttl` **[number][84]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
+*   `data` **[Array][125]<[number][93]>** data as an Array of bytes
+*   `from` **[number][93]** from/source node address
+*   `to` **[number][93]** to/destination node address
+*   `protocol` **[number][93]** protocol number to be used to send this Datagram
+*   `ttl` **[number][93]** time-to-live for the datagram. Time-to-live is advisory, and an agent may choose it ignore it
 
 ## AgentID
 
-*   **See**: [fjåge.js Documentation][88]
+[js/src/unetutils.js:264-264][141]
+
+*   **See**: [fjåge.js Documentation][142]
 
 An identifier for an agent or a topic.
 
 ## Services
 
-*   **See**: [fjåge.js Documentation][88]
+[js/src/unetutils.js:264-264][141]
+
+*   **See**: [fjåge.js Documentation][142]
 
 Services supported by fjage agents.
 
 ## Performative
 
-*   **See**: [fjåge.js Documentation][88]
+[js/src/unetutils.js:264-264][141]
+
+*   **See**: [fjåge.js Documentation][142]
 
 An action represented by a message.
 
 ## MessageClass
 
-*   **See**: [fjåge.js Documentation][88]
+[js/src/unetutils.js:264-264][141]
+
+*   **See**: [fjåge.js Documentation][142]
 
 Function to creates a unqualified message class based on a fully qualified name.
 
@@ -671,78 +792,186 @@ Function to creates a unqualified message class based on a fully qualified name.
 
 [50]: #getsendmode
 
-[51]: #send
+[51]: #_waitforsendcompletion
 
 [52]: #parameters-14
 
-[53]: #receive
+[53]: #send
 
-[54]: #getgateway
+[54]: #parameters-15
 
-[55]: #agentforservice
+[55]: #receive
 
-[56]: #parameters-15
+[56]: #getgateway
 
-[57]: #agentsforservice
+[57]: #agentforservice
 
 [58]: #parameters-16
 
-[59]: #agent
+[59]: #agentsforservice
 
 [60]: #parameters-17
 
-[61]: #host
+[61]: #agent
 
 [62]: #parameters-18
 
-[63]: #onparamchange
+[63]: #host
 
 [64]: #parameters-19
 
-[65]: #removeparamchange
+[65]: #onparamchange
 
 [66]: #parameters-20
 
-[67]: #protocol
+[67]: #removeparamchange
 
-[68]: #unetmessages
+[68]: #parameters-21
 
-[69]: #togps
+[69]: #protocol
 
-[70]: #parameters-21
+[70]: #unetmessages
 
-[71]: #tolocal
+[71]: #togps
 
 [72]: #parameters-22
 
-[73]: #datagramreq
+[73]: #tolocal
 
-[74]: #properties
+[74]: #parameters-23
 
-[75]: #datagramntf
+[75]: #datagramreq
 
-[76]: #properties-1
+[76]: #properties
 
-[77]: #agentid
+[77]: #datagramntf
 
-[78]: #services
+[78]: #properties-1
 
-[79]: #performative
+[79]: #agentid
 
-[80]: #messageclass
+[80]: #services
 
-[81]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[81]: #performative
 
-[82]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[82]: #messageclass
 
-[83]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[83]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L44-L624 "Source code on GitHub"
 
-[84]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[84]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
 
-[85]: #unetsocketreceive
+[85]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[86]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[86]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L113-L116 "Source code on GitHub"
 
-[87]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[87]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L122-L124 "Source code on GitHub"
 
-[88]: https://org-arl.github.io/fjage/jsdoc/
+[88]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[89]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L133-L139 "Source code on GitHub"
+
+[90]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L146-L146 "Source code on GitHub"
+
+[91]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L152-L152 "Source code on GitHub"
+
+[92]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L166-L173 "Source code on GitHub"
+
+[93]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[94]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L180-L183 "Source code on GitHub"
+
+[95]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L189-L189 "Source code on GitHub"
+
+[96]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L195-L201 "Source code on GitHub"
+
+[97]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L207-L207 "Source code on GitHub"
+
+[98]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L213-L213 "Source code on GitHub"
+
+[99]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L219-L219 "Source code on GitHub"
+
+[100]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L229-L232 "Source code on GitHub"
+
+[101]: #unetsocketreceive
+
+[102]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L238-L238 "Source code on GitHub"
+
+[103]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L246-L248 "Source code on GitHub"
+
+[104]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L254-L256 "Source code on GitHub"
+
+[105]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L263-L265 "Source code on GitHub"
+
+[106]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L271-L273 "Source code on GitHub"
+
+[107]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L282-L284 "Source code on GitHub"
+
+[108]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L290-L292 "Source code on GitHub"
+
+[109]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L300-L302 "Source code on GitHub"
+
+[110]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L308-L310 "Source code on GitHub"
+
+[111]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L318-L320 "Source code on GitHub"
+
+[112]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L326-L328 "Source code on GitHub"
+
+[113]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L336-L338 "Source code on GitHub"
+
+[114]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L344-L346 "Source code on GitHub"
+
+[115]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L355-L357 "Source code on GitHub"
+
+[116]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L363-L365 "Source code on GitHub"
+
+[117]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L373-L375 "Source code on GitHub"
+
+[118]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L381-L383 "Source code on GitHub"
+
+[119]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L392-L395 "Source code on GitHub"
+
+[120]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L401-L403 "Source code on GitHub"
+
+[121]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L416-L418 "Source code on GitHub"
+
+[122]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L424-L426 "Source code on GitHub"
+
+[123]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L468-L478 "Source code on GitHub"
+
+[124]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L489-L527 "Source code on GitHub"
+
+[125]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[126]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L535-L546 "Source code on GitHub"
+
+[127]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L552-L552 "Source code on GitHub"
+
+[128]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L559-L562 "Source code on GitHub"
+
+[129]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L569-L572 "Source code on GitHub"
+
+[130]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L579-L582 "Source code on GitHub"
+
+[131]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L589-L598 "Source code on GitHub"
+
+[132]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L609-L612 "Source code on GitHub"
+
+[133]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[134]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetsocket.js#L620-L623 "Source code on GitHub"
+
+[135]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L42-L45 "Source code on GitHub"
+
+[136]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L60-L63 "Source code on GitHub"
+
+[137]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L181-L187 "Source code on GitHub"
+
+[138]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L196-L202 "Source code on GitHub"
+
+[139]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L211-L227 "Source code on GitHub"
+
+[140]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L229-L238 "Source code on GitHub"
+
+[141]: https://github.com/org-arl/unetsockets/blob/57260efc1b2175700ba9aed19e0112c40f13e3fe/js/src/unetutils.js#L264-L264 "Source code on GitHub"
+
+[142]: https://org-arl.github.io/fjage/jsdoc/
