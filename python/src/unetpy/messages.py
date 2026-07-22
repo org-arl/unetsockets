@@ -28,6 +28,7 @@ DatagramReq = MessageClass("org.arl.unet.DatagramReq")
 ParamChangeNtf = MessageClass("org.arl.unet.ParamChangeNtf")
 RefuseRsp = MessageClass("org.arl.unet.RefuseRsp")
 FailureNtf = MessageClass("org.arl.unet.FailureNtf")
+DatagramTransmissionNtf = MessageClass("org.arl.unet.DatagramTransmissionNtf")
 
 #remote
 
@@ -54,7 +55,7 @@ RxFrameNtf = MessageClass("org.arl.unet.phy.RxFrameNtf", DatagramNtf)
 RxFrameStartNtf = MessageClass("org.arl.unet.phy.RxFrameStartNtf")
 SyncInfoReq = MessageClass("org.arl.unet.phy.SyncInfoReq")
 SyncInfoRsp = MessageClass("org.arl.unet.phy.SyncInfoRsp")
-TxFrameNtf = MessageClass("org.arl.unet.phy.TxFrameNtf")
+TxFrameNtf = MessageClass("org.arl.unet.phy.TxFrameNtf", DatagramTransmissionNtf)
 TxFrameReq = MessageClass("org.arl.unet.phy.TxFrameReq", DatagramReq)
 TxFrameStartNtf = MessageClass("org.arl.unet.phy.TxFrameStartNtf")
 TxRawFrameReq = MessageClass("org.arl.unet.phy.TxRawFrameReq")
