@@ -55,7 +55,10 @@ class UnetSocket:
                     print(f"Received: {ntf.data}")
     """
 
-    REQUEST_TIMEOUT = 1000
+    # Bounded wait for a request AGREE/response (e.g. datagram acceptance, parameter
+    # reads). Matches the Java/Groovy UnetSocket.REQUEST_TIMEOUT. The wait for a reliable
+    # datagram's delivery notification is NOT bounded by this; see _await_send_completion.
+    REQUEST_TIMEOUT = 5000
 
     NON_BLOCKING = 0
     """When used as a timeout value, indicates a non-blocking receive().
@@ -985,9 +988,14 @@ class UnetSocket:
     def _await_send_completion(self, req: Message, delivery_only: bool) -> bool:
         if self.gw is None:
             return False
+        # Block indefinitely for the delivery/transmission notification, matched by
+        # inReplyTo == req.msgID. This mirrors the Java/Groovy UnetSocket, which waits
+        # with Gateway.BLOCKING here (only the AGREE wait is bounded by REQUEST_TIMEOUT).
+        # A bounded wait would wrongly report a successful-but-slow delivery as failed;
+        # e.g. reliable+ROBUST delivery can take several seconds.
         ntf = self.gw.receive(
             lambda msg: self._matches_send_completion(msg, req, delivery_only),
-            self.REQUEST_TIMEOUT,
+            UnetSocket.BLOCKING,
         )
         return self._is_successful_send_completion(ntf, delivery_only)
 
@@ -1010,7 +1018,10 @@ class UnetSocket:
     def _is_send_completion_notification(self, msg: Message, delivery_only: bool) -> bool:
         clazz = getattr(msg, "__clazz__", "")
         if delivery_only:
-            return isinstance(msg, (RemoteSuccessNtf, RemoteFailureNtf))
+            # A reliable datagram is acknowledged with a DatagramDeliveryNtf (success)
+            # or DatagramFailureNtf (failure). RemoteSuccessNtf/RemoteFailureNtf are
+            # subclasses of these, so this also covers remote-message delivery.
+            return isinstance(msg, (DatagramDeliveryNtf, DatagramFailureNtf))
         return (
             isinstance(
                 msg,
@@ -1023,6 +1034,8 @@ class UnetSocket:
         if msg is None:
             return False
         if delivery_only:
-            return isinstance(msg, RemoteSuccessNtf)
+            # DatagramDeliveryNtf (and its RemoteSuccessNtf subclass) => delivered.
+            # DatagramFailureNtf / RemoteFailureNtf are not DatagramDeliveryNtf => failed.
+            return isinstance(msg, DatagramDeliveryNtf)
         clazz = getattr(msg, "__clazz__", "")
         return isinstance(msg, (DatagramDeliveryNtf, RemoteSuccessNtf)) or clazz == "org.arl.unet.DatagramTransmissionNtf"
