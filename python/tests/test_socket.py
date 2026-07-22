@@ -336,7 +336,15 @@ class TestUnetSocketJavaParity:
             assert sock._resolve_provider() == remote
 
     def test_reliable_semi_blocking_send_waits_for_delivery(self, monkeypatch):
-        """Reliable semi-blocking send should wait for a delivery/failure notification."""
+        """Reliable semi-blocking send waits (unbounded) for a delivery/failure notification.
+
+        A reliable datagram is acknowledged by the stack with a DatagramDeliveryNtf
+        (delivered) or DatagramFailureNtf (failed), matched by inReplyTo. The wait must
+        be unbounded (BLOCKING): reliable delivery can take several seconds, so a bounded
+        wait would wrongly report a slow-but-successful delivery as a failure.
+        """
+        from unetpy.messages import DatagramDeliveryNtf, DatagramFailureNtf
+
         with UnetSocket(NODE_A_HOST, NODE_A_PORT) as sock:
             sock.connect(NODE_B_ADDRESS, Protocol.USER)
             sock.setReliability(True)
@@ -345,31 +353,33 @@ class TestUnetSocketJavaParity:
             class _Agree:
                 perf = Performative.AGREE
 
-            class _RemoteSuccess:
-                inReplyTo = None
-
-                def __init__(self, in_reply_to):
-                    self.inReplyTo = in_reply_to
-
-            receive_calls = {"count": 0}
             request_ids = {"value": None}
+            receive_calls = {"count": 0, "timeout": None}
 
             def _request(_req, _timeout):
                 request_ids["value"] = _req.msgID
                 return _Agree()
 
-            def _receive(_matcher, _timeout):
-                receive_calls["count"] += 1
-                msg = _RemoteSuccess(request_ids["value"])
-                return msg if _matcher(msg) else None
+            def _receive_returning(ntf_class):
+                def _receive(_matcher, _timeout):
+                    receive_calls["count"] += 1
+                    receive_calls["timeout"] = _timeout
+                    ntf = ntf_class()
+                    ntf.inReplyTo = request_ids["value"]
+                    return ntf if _matcher(ntf) else None
+                return _receive
 
             monkeypatch.setattr(sock.gw, "request", _request)
-            monkeypatch.setattr(sock.gw, "receive", _receive)
 
-            monkeypatch.setattr("unetpy.socket.RemoteSuccessNtf", _RemoteSuccess)
-
+            # Delivered -> True, and the delivery wait is unbounded (BLOCKING).
+            monkeypatch.setattr(sock.gw, "receive", _receive_returning(DatagramDeliveryNtf))
             assert sock.send([71, 72, 73]) is True
             assert receive_calls["count"] == 1
+            assert receive_calls["timeout"] == UnetSocket.BLOCKING
+
+            # Delivery failure -> False.
+            monkeypatch.setattr(sock.gw, "receive", _receive_returning(DatagramFailureNtf))
+            assert sock.send([71, 72, 73]) is False
 
     def test_set_robustness_accepts_normal(self):
         """UnetSocket should allow switching robustness back to NORMAL."""
