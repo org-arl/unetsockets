@@ -2,7 +2,7 @@ import {AgentID, Gateway, Performative} from 'fjage';
 import {Services, UnetMessages, UnetTopics, Protocol} from './unetutils';
 
 const BROADCAST_ADDR = 0;
-const REQUEST_TIMEOUT = 1000;
+const REQUEST_TIMEOUT = 5000;
 const NON_BLOCKING = 0;
 const SEMI_BLOCKING = 1;
 const BLOCKING = 2;
@@ -13,7 +13,6 @@ const DatagramFailureNtf = UnetMessages.DatagramFailureNtf;
 const DatagramReq = UnetMessages.DatagramReq;
 const DatagramNtf = UnetMessages.DatagramNtf;
 const DatagramTransmissionNtf = UnetMessages.DatagramTransmissionNtf;
-const RemoteDeliveryNtf = UnetMessages.RemoteDeliveryNtf;
 const RemoteFailureNtf = UnetMessages.RemoteFailureNtf;
 const RemoteSuccessNtf = UnetMessages.RemoteSuccessNtf;
 
@@ -462,10 +461,6 @@ export default class UnetSocket {
     if (!hasValue(req.messageClass) && hasValue(this._messageClass)) req.messageClass = this._messageClass;
   }
 
-  _effectiveReliability(req) {
-    return hasValue(req.reliability) ? req.reliability : this._reliability;
-  }
-
   async _waitForNotification(req, types, timeout = REQUEST_TIMEOUT) {
     return await this._gw.receive(msg => {
       if (!types.some(type => msg instanceof type)) return false;
@@ -478,7 +473,6 @@ export default class UnetSocket {
     const notification = await this._waitForNotification(req, [
       DatagramDeliveryNtf,
       DatagramFailureNtf,
-      RemoteDeliveryNtf,
       RemoteSuccessNtf,
       RemoteFailureNtf,
     ]);
@@ -492,7 +486,6 @@ export default class UnetSocket {
       DatagramTransmissionNtf,
       DatagramDeliveryNtf,
       DatagramFailureNtf,
-      RemoteDeliveryNtf,
       RemoteSuccessNtf,
       RemoteFailureNtf,
     ]);
@@ -542,7 +535,8 @@ export default class UnetSocket {
     if (this._sendMode === NON_BLOCKING) return true;
 
     if (this._sendMode === SEMI_BLOCKING) {
-      if (this._effectiveReliability(req) !== true) return true;
+      const effectiveReliability = hasValue(req.reliability) ? req.reliability : this._reliability;
+      if (effectiveReliability !== true) return true;
       return await this._waitForSemiBlockingOutcome(req);
     }
 

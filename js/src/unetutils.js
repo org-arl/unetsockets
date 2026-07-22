@@ -2,9 +2,15 @@ import {AgentID, MessageClass, Services, PutFileReq, GetFileReq, GetFileRsp, She
 
 const DatagramReq = MessageClass('org.arl.unet.DatagramReq');
 const DatagramNtf = MessageClass('org.arl.unet.DatagramNtf');
+const DatagramDeliveryNtf = MessageClass('org.arl.unet.DatagramDeliveryNtf');
+const DatagramFailureNtf = MessageClass('org.arl.unet.DatagramFailureNtf');
+const DatagramTransmissionNtf = MessageClass('org.arl.unet.DatagramTransmissionNtf');
 const TxFrameReq = MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq);
 const RxFrameNtf = MessageClass('org.arl.unet.phy.RxFrameNtf', DatagramNtf);
 const BasebandSignal = MessageClass('org.arl.unet.bb.BasebandSignal');
+const RemoteMessageReq = MessageClass('org.arl.unet.remote.RemoteMessageReq', DatagramReq);
+const RemoteMessageNtf = MessageClass('org.arl.unet.remote.RemoteMessageNtf', DatagramNtf);
+const AgentLifecycleNtf = MessageClass('org.arl.unet.AgentLifecycleNtf');
 
 const UnetTopics = {
     'PARAMCHANGE' : 'org.arl.unet.Topics.PARAMCHANGE',  // Topic for parameter change notification.
@@ -65,23 +71,26 @@ let UnetMessages = {
 
   // unet
   'TestReportNtf'          : MessageClass('org.arl.unet.TestReportNtf'),
-  'AbnormalTerminationNtf' : MessageClass('org.arl.unet.AbnormalTerminationNtf'),
+  'AgentLifecycleNtf'      : AgentLifecycleNtf,
+  'AgentStartNtf'          : MessageClass('org.arl.unet.AgentStartNtf', AgentLifecycleNtf),
+  'AbnormalTerminationNtf' : MessageClass('org.arl.unet.AbnormalTerminationNtf', AgentLifecycleNtf),
+  'AgentTerminationNtf'     : MessageClass('org.arl.unet.AgentTerminationNtf', AgentLifecycleNtf),
   'CapabilityListRsp'      : MessageClass('org.arl.unet.CapabilityListRsp'),
   'CapabilityReq'          : MessageClass('org.arl.unet.CapabilityReq'),
   'ClearReq'               : MessageClass('org.arl.unet.ClearReq'),
   'DatagramCancelReq'      : MessageClass('org.arl.unet.DatagramCancelReq'),
-  'DatagramDeliveryNtf'    : MessageClass('org.arl.unet.DatagramDeliveryNtf'),
-  'DatagramFailureNtf'     : MessageClass('org.arl.unet.DatagramFailureNtf'),
-  'DatagramNtf'            : MessageClass('org.arl.unet.DatagramNtf'),
-  'DatagramProgressNtf'    : MessageClass('org.arl.unet.DatagramProgressNtf'),
-  'DatagramReq'            : MessageClass('org.arl.unet.DatagramReq'),
-  'DatagramTransmissionNtf': MessageClass('org.arl.unet.DatagramTransmissionNtf'),
+  'DatagramDeliveryNtf'    : DatagramDeliveryNtf,
+  'DatagramFailureNtf'     : DatagramFailureNtf,
+  'DatagramNtf'            : DatagramNtf,
+  'DatagramReq'            : DatagramReq,
+  'DatagramTransmissionNtf': DatagramTransmissionNtf,
   'ParamChangeNtf'         : MessageClass('org.arl.unet.ParamChangeNtf'),
   'RefuseRsp'              : MessageClass('org.arl.unet.RefuseRsp'),
   'FailureNtf'             : MessageClass('org.arl.unet.FailureNtf'),
+  'ProgressNtf'            : MessageClass('org.arl.unet.ProgressNtf'),
 
   // net
-  'DatagramTraceReq'       : MessageClass('org.arl.unet.net.DatagramTraceReq'),
+  'DatagramTraceReq'       : MessageClass('org.arl.unet.net.DatagramTraceReq', DatagramReq),
   'RouteDiscoveryReq'      : MessageClass('org.arl.unet.net.RouteDiscoveryReq'),
   'RouteTraceReq'          : MessageClass('org.arl.unet.net.RouteTraceReq'),
   'RouteDiscoveryNtf'      : MessageClass('org.arl.unet.net.RouteDiscoveryNtf'),
@@ -101,8 +110,8 @@ let UnetMessages = {
   'RxFrameStartNtf'        : MessageClass('org.arl.unet.phy.RxFrameStartNtf'),
   'SyncInfoReq'            : MessageClass('org.arl.unet.phy.SyncInfoReq'),
   'SyncInfoRsp'            : MessageClass('org.arl.unet.phy.SyncInfoRsp'),
-  'TxFrameNtf'             : MessageClass('org.arl.unet.phy.TxFrameNtf'),
-  'TxFrameReq'             : MessageClass('org.arl.unet.phy.TxFrameReq', DatagramReq),
+  'TxFrameNtf'             : MessageClass('org.arl.unet.phy.TxFrameNtf', DatagramTransmissionNtf),
+  'TxFrameReq'             : TxFrameReq,
   'TxFrameStartNtf'        : MessageClass('org.arl.unet.phy.TxFrameStartNtf'),
   'TxRawFrameReq'          : MessageClass('org.arl.unet.phy.TxRawFrameReq'),
 
@@ -128,7 +137,6 @@ let UnetMessages = {
   'RespondReq'             : MessageClass('org.arl.unet.localization.RespondReq'),
   'InterrogationNtf'       : MessageClass('org.arl.unet.localization.InterrogationNtf'),
 
-
   // mac
   'ReservationAcceptReq'   : MessageClass('org.arl.unet.mac.ReservationAcceptReq'),
   'ReservationCancelReq'   : MessageClass('org.arl.unet.mac.ReservationCancelReq'),
@@ -138,17 +146,17 @@ let UnetMessages = {
   'RxAckNtf'               : MessageClass('org.arl.unet.mac.RxAckNtf'),
   'TxAckReq'               : MessageClass('org.arl.unet.mac.TxAckReq'),
 
-
   // remote
-  'RemoteExecReq'          : MessageClass('org.arl.unet.remote.RemoteExecReq'),
-  'RemoteFailureNtf'       : MessageClass('org.arl.unet.remote.RemoteFailureNtf'),
+  'RemoteMessageReq'       : RemoteMessageReq,
+  'RemoteMessageNtf'       : RemoteMessageNtf,
+  'RemoteExecReq'          : MessageClass('org.arl.unet.remote.RemoteExecReq', RemoteMessageReq),
+  'RemoteFailureNtf'       : MessageClass('org.arl.unet.remote.RemoteFailureNtf', DatagramFailureNtf),
   'RemoteFileGetReq'       : MessageClass('org.arl.unet.remote.RemoteFileGetReq'),
   'RemoteFileNtf'          : MessageClass('org.arl.unet.remote.RemoteFileNtf'),
   'RemoteFilePutReq'       : MessageClass('org.arl.unet.remote.RemoteFilePutReq'),
-  'RemoteDeliveryNtf'      : MessageClass('org.arl.unet.remote.RemoteDeliveryNtf'),
-  'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf'),
-  'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf'),
-  'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq'),
+  'RemoteSuccessNtf'       : MessageClass('org.arl.unet.remote.RemoteSuccessNtf', DatagramDeliveryNtf),
+  'RemoteTextNtf'          : MessageClass('org.arl.unet.remote.RemoteTextNtf', RemoteMessageNtf),
+  'RemoteTextReq'          : MessageClass('org.arl.unet.remote.RemoteTextReq', RemoteMessageReq),
 
   // scheduler
   'AddScheduledSleepReq'   : MessageClass('org.arl.unet.scheduler.AddScheduledSleepReq'),
